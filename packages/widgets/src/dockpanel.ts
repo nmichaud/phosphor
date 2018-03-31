@@ -22,7 +22,7 @@ import {
 } from '@phosphor/domutils';
 
 import {
-  Drag, IDragEvent
+  Drag, IDragEvent, DropAction
 } from '@phosphor/dragdrop';
 
 import {
@@ -928,11 +928,21 @@ class DockPanel extends Widget {
     // Hide the tab node in the original tab.
     tab.classList.add('p-mod-hidden');
 
+    // save current layout
+    let savedLayout = this.saveLayout();
+
     // Create the cleanup callback.
-    let cleanup = (() => {
+    let cleanup = ((result: DropAction) => {
+      if (result === 'none') {
+        // Invalid drop zone, restore previous layout
+        this.restoreLayout(savedLayout);
+      }
       this._drag = null;
       tab.classList.remove('p-mod-hidden');
     });
+
+    // Remove widget from layout
+    title.owner.parent = null;
 
     // Start the drag operation and cleanup when done.
     this._drag.start(clientX, clientY).then(cleanup);
