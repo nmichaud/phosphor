@@ -2396,6 +2396,10 @@ class DataGrid extends Widget {
     let hw = this.headerWidth;
     let hh = this.headerHeight;
 
+    // Fetch the row body and column body sizes
+    let bw = Math.min(this.pageWidth, this.bodyWidth);
+    let bh = Math.min(this.pageHeight, this.bodyHeight);
+
     // Set up the initial paint limits.
     let xMin = 0;
     let yMin = 0;
@@ -2413,10 +2417,12 @@ class DataGrid extends Widget {
     case 'body':
       if (isRows) {
         yMin = hh;
+        yMax = hh + bh;
         y1 = hh + p1 - this._scrollY;
         y2 = hh + p2 - this._scrollY;
       } else {
         xMin = hw;
+        xMax = hw + bw;
         x1 = hw + p1 - this._scrollX;
         x2 = hw + p2 - this._scrollX;
       }
@@ -2432,16 +2438,14 @@ class DataGrid extends Widget {
       y2 = p2;
       break;
     case 'row-footer':
-      // TODO xMax
-      xMin = Math.min(hw - 1, xMax);
-      x1 = p1;
-      x2 = p2;
+      xMin = hw + bw;
+      x1 = p1 + hw + bw;
+      x2 = p2 + hw + bw;
       break;
     case 'column-footer':
-      // TODO yMax
-      yMax = Math.min(hh - 1, yMax);
-      y1 = p1;
-      y2 = p2;
+      yMin = hh + bh;
+      y1 = p1 + hh + bh;
+      y2 = p2 + hh + bh;
       break;
     default:
       throw 'unreachable';
@@ -2540,19 +2544,24 @@ class DataGrid extends Widget {
     let hw = this.headerWidth;
     let hh = this.headerHeight;
 
+    // Fetch the row body and column body sizes
+    let bw = Math.min(this.pageWidth, this.bodyWidth);
+    let bh = Math.min(this.pageHeight, this.bodyHeight);
+
+    //console.log(this._viewportHeight, bh, hh);
     // Set up the initial paint limits.
     let xMin = 0;
     let yMin = 0;
     let xMax = this._viewportWidth - 1;
     let yMax = this._viewportHeight - 1;
 
-    //Math.min(this.pageWidth, this._columnSections.totalSize - this._scrollX);
-
     // Adjust the limits and paint region.
     switch (region) {
     case 'body':
       xMin = hw;
       yMin = hh;
+      xMax = hw + bw;
+      yMax = hh + bh;
       x1 += hw - this._scrollX;
       x2 += hw - this._scrollX;
       y1 += hh - this._scrollY;
@@ -2560,21 +2569,35 @@ class DataGrid extends Widget {
       break;
     case 'row-header':
       yMin = hh;
+      yMax = hh + bh;
       xMax = Math.min(hw - 1, xMax);
       y1 += hh - this._scrollY;
       y2 += hh - this._scrollY;
       break;
     case 'column-header':
       xMin = hw;
+      xMax = hw + bw;
       yMax = Math.min(hh - 1, yMax);
       x1 += hw - this._scrollX;
       x2 += hw - this._scrollX;
       break;
     case 'row-footer':
-      // TODO
+      yMin = hh;
+      yMax = hh + bh;
+      xMin = hw + bw;
+      x1 += hw + bw;
+      x2 += hw + bw;
+      y1 += hh - this._scrollY;
+      y2 += hh - this._scrollY;
       break;
     case 'column-footer':
-      // TODO
+      xMin = hw;
+      xMax = hw + bw;
+      yMin = hh + bh;
+      y1 += hh + bh;
+      y2 += hh + bh;
+      x1 += hw - this._scrollX;
+      x2 += hw - this._scrollX;
       break;
     case 'corner-header':
       xMax = Math.min(hw - 1, xMax);
