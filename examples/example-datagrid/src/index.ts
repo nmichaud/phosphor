@@ -35,6 +35,12 @@ class LargeDataModel extends DataModel {
     if (region === 'column-header') {
       return `C: ${row}, ${column}`;
     }
+    if (region === 'row-footer') {
+      return `R: ${row}, ${column}`;
+    }
+    if (region === 'column-footer') {
+      return `C: ${row}, ${column}`;
+    }
     if (region === 'corner-header') {
       return `N: ${row}, ${column}`;
     }
@@ -129,6 +135,12 @@ class RandomDataModel extends DataModel {
     if (region === 'column-header') {
       return `C: ${row}, ${column}`;
     }
+    if (region === 'row-footer') {
+      return `R: ${row}, ${column}`;
+    }
+    if (region === 'column-footer') {
+      return `C: ${row}, ${column}`;
+    }
     if (region === 'corner-header') {
       return `N: ${row}, ${column}`;
     }
@@ -202,19 +214,28 @@ function main(): void {
   let model4 = new RandomDataModel(80, 80);
   let model5 = new JSONModel(Data.cars);
 
-  let blueStripeStyle: DataGrid.IStyle = {
+  let style = {
     ...DataGrid.defaultStyle,
+    gridLineColor: 'rgba(20, 20, 20, 0.15)',
+    headerBackgroundColor: '#F3F3F3',
+    headerGridLineColor: 'rgba(20, 20, 20, 0.5)',
+    footerBackgroundColor: '#F3F3F3',
+    footerGridLineColor: 'rgba(20, 20, 20, 0.5)'    
+  }
+
+  let blueStripeStyle: DataGrid.IStyle = {
+    ...style,
     rowBackgroundColor: i => i % 2 === 0 ? 'rgba(138, 172, 200, 0.3)' : '',
     columnBackgroundColor: i => i % 2 === 0 ? 'rgba(100, 100, 100, 0.1)' : ''
   };
 
   let brownStripeStyle: DataGrid.IStyle = {
-    ...DataGrid.defaultStyle,
+    ...style,
     columnBackgroundColor: i => i % 2 === 0 ? 'rgba(165, 143, 53, 0.2)' : ''
   };
 
   let greenStripeStyle: DataGrid.IStyle = {
-    ...DataGrid.defaultStyle,
+    ...style,
     rowBackgroundColor: i => i % 2 === 0 ? 'rgba(64, 115, 53, 0.2)' : ''
   };
 
@@ -238,11 +259,11 @@ function main(): void {
   let grid2 = new DataGrid({ style: brownStripeStyle, uniformResizing: 'body-column' });
   grid2.model = model2;
 
-  let grid3 = new DataGrid();
+  let grid3 = new DataGrid({ style: style, footerVisibility: 'all' });
   grid3.cellRenderers.set('body', {}, fgColorFloatRenderer);
   grid3.model = model3;
 
-  let grid4 = new DataGrid({ uniformResizing: 'all' });
+  let grid4 = new DataGrid({ uniformResizing: 'all', footerVisibility: 'all' });
   grid4.cellRenderers.set('body', {}, bgColorFloatRenderer);
   grid4.model = model4;
 
@@ -268,7 +289,7 @@ function main(): void {
   dock.addWidget(wrapper2, { mode: 'split-right', ref: wrapper1 });
   dock.addWidget(wrapper3, { mode: 'split-bottom', ref: wrapper1 });
   dock.addWidget(wrapper4, { mode: 'split-bottom', ref: wrapper2 });
-  dock.addWidget(wrapper5, { mode: 'split-bottom', ref: wrapper2 });
+  //dock.addWidget(wrapper5, { mode: 'split-bottom', ref: wrapper2 });
 
   window.onresize = () => { dock.update(); };
 

@@ -3,7 +3,7 @@
     "declaration": false,
     "noImplicitAny": true,
     "noEmitOnError": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "strictNullChecks": true,
     "module": "commonjs",
     "moduleResolution": "node",
