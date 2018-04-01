@@ -2053,8 +2053,8 @@ class DataGrid extends Widget {
       return;
     }
 
-    let floatX = hw + this._columnSections.totalSize - this._scrollX;
-    let floatY = hh + this._rowSections.totalSize - this._scrollY;
+    let floatX = hw + this.bodyWidth - this._scrollX - 1;
+    let floatY = hh + this.bodyHeight - this._scrollY - 1;
 
     // Paint the dirty region to the right, if needed.
     if (right > 0) {
@@ -3034,7 +3034,7 @@ class DataGrid extends Widget {
   private _drawRowFooterRegion(rx: number, ry: number, rw: number, rh: number): void {
     // Get the visible content dimensions.
     let contentW = this.footerWidth;
-    let contentH = Math.min(this.pageHeight, this._rowSections.totalSize - this._scrollY);
+    let contentH = Math.min(this.pageHeight, this.bodyHeight - this._scrollY);
 
     // Bail if there is no content to draw.
     if (contentW <= 0 || contentH <= 0) {
@@ -3042,7 +3042,7 @@ class DataGrid extends Widget {
     }
 
     // Get the visible content origin.
-    let contentX = this.headerWidth + Math.min(this.pageWidth, this._columnSections.totalSize - this._scrollX);
+    let contentX = this.headerWidth + Math.min(this.pageWidth, this.bodyWidth - this._scrollX - 1);
     let contentY = this.headerHeight;
 
     // Bail if the dirty rect does not intersect the content area.
@@ -3130,7 +3130,8 @@ class DataGrid extends Widget {
     // Draw the vertical grid lines.
     this._drawVerticalGridLines(rgn,
       this._style.footerVerticalGridLineColor ||
-      this._style.footerGridLineColor
+      this._style.footerGridLineColor,
+      true
     );
   }
 
@@ -3245,7 +3246,7 @@ class DataGrid extends Widget {
    */
   private _drawColumnFooterRegion(rx: number, ry: number, rw: number, rh: number): void {
     // Get the visible content dimensions.
-    let contentW = Math.min(this.pageWidth, this._columnSections.totalSize - this._scrollX);
+    let contentW = Math.min(this.pageWidth, this.bodyWidth - this._scrollX);
     let contentH = this.footerHeight;
 
     // Bail if there is no content to draw.
@@ -3255,7 +3256,7 @@ class DataGrid extends Widget {
 
     // Get the visible content origin.
     let contentX = this.headerWidth;
-    let contentY = this.headerHeight + Math.min(this.pageHeight, this._rowSections.totalSize - this._scrollY);
+    let contentY = this.headerHeight + Math.min(this.pageHeight, this.bodyHeight - this._scrollY - 1);
 
     // Bail if the dirty rect does not intersect the content area.
     if (rx + rw <= contentX) {
@@ -3336,7 +3337,8 @@ class DataGrid extends Widget {
     // Draw the horizontal grid lines.
     this._drawHorizontalGridLines(rgn,
       this._style.footerHorizontalGridLineColor ||
-      this._style.footerGridLineColor
+      this._style.footerGridLineColor,
+      true
     );
 
     // Draw the vertical grid lines.
@@ -3693,7 +3695,7 @@ class DataGrid extends Widget {
   /**
    * Draw the horizontal grid lines for the given paint region.
    */
-  private _drawHorizontalGridLines(rgn: Private.IPaintRegion, color: string | undefined): void {
+  private _drawHorizontalGridLines(rgn: Private.IPaintRegion, color: string | undefined, reverse: boolean = false): void {
     // Bail if there is no color to draw.
     if (!color) {
       return;
@@ -3709,10 +3711,21 @@ class DataGrid extends Widget {
     // Set the line width for the grid lines.
     this._canvasGC.lineWidth = 1;
 
+    let y = rgn.y;
+    if (reverse === true) {
+       y += rgn.height;
+    }
+
     // Draw the horizontal grid lines.
-    for (let y = rgn.y, j = 0, n = rgn.rowSizes.length; j < n; ++j) {
+    for (let j = 0, n = rgn.rowSizes.length; j < n; ++j) {
+      let idx = j;
+      let factor = 1;
+      if (reverse === true) {
+        idx = n - j - 1;
+        factor = -1;
+      }
       // Fetch the size of the row.
-      let size = rgn.rowSizes[j];
+      let size = rgn.rowSizes[idx] * factor;
 
       // Skip zero sized rows.
       if (size === 0) {
@@ -3720,7 +3733,7 @@ class DataGrid extends Widget {
       }
 
       // Compute the Y position of the line.
-      let pos = y + size - 1;
+      let pos = y + size - ((reverse === true) ? 0 : 1);
 
       // Draw the line if it's in range of the dirty rect.
       if (pos >= rgn.yMin && pos <= rgn.yMax) {
@@ -3740,7 +3753,7 @@ class DataGrid extends Widget {
   /**
    * Draw the vertical grid lines for the given paint region.
    */
-  private _drawVerticalGridLines(rgn: Private.IPaintRegion, color: string | undefined): void {
+  private _drawVerticalGridLines(rgn: Private.IPaintRegion, color: string | undefined, reverse: boolean = false): void {
     // Bail if there is no color to draw.
     if (!color) {
       return;
@@ -3756,10 +3769,21 @@ class DataGrid extends Widget {
     // Set the line width for the grid lines.
     this._canvasGC.lineWidth = 1;
 
+    let x = rgn.x;
+    if (reverse === true) {
+      x = x + rgn.width;
+    }
+
     // Draw the vertical grid lines.
-    for (let x = rgn.x, i = 0, n = rgn.columnSizes.length; i < n; ++i) {
+    for (let i = 0, n = rgn.columnSizes.length; i < n; ++i) {
+      let idx = i;
+      let factor = 1;
+      if (reverse === true) {
+        idx = n - i - 1;
+        factor = -1;
+      }
       // Fetch the size of the column.
-      let size = rgn.columnSizes[i];
+      let size = rgn.columnSizes[i] * factor;
 
       // Skip zero sized columns.
       if (size === 0) {
@@ -3767,7 +3791,7 @@ class DataGrid extends Widget {
       }
 
       // Compute the X position of the line.
-      let pos = x + size - 1;
+      let pos = x + size - ((reverse == true) ? 0 : 1);
 
       // Draw the line if it's in range of the dirty rect.
       if (pos >= rgn.xMin && pos <= rgn.xMax) {
