@@ -125,10 +125,16 @@ namespace DataModel {
   type ColumnRegion = 'body' | 'row-header' | 'row-footer';
 
   /**
+   * A type alias for the corner regions.
+   */
+  export
+  type CornerRegion = 'nw-corner' | 'sw-corner' | 'ne-corner' | 'se-corner';
+
+  /**
    * A type alias for the data model cell regions.
    */
   export
-  type CellRegion = 'body' | 'row-header' | 'row-footer' | 'column-header' | 'column-footer' | 'corner-header';
+  type CellRegion = 'body' | 'row-header' | 'row-footer' | 'column-header' | 'column-footer' | CornerRegion;
 
   /**
    * The metadata for a column in a data model.
