@@ -766,7 +766,7 @@ class DataGrid extends Widget {
    * This is a no-op if `index` is invalid.
    */
   resizeSection(area: 'row' | 'column' | 'row-header' | 'column-header', index: number, size: number): void {
-    let type: 'body-row' | 'body-column' | 'header-row' | 'header-column';
+    let type: 'body-row' | 'body-column' | 'header-row' | 'header-column' | 'footer-row' | 'footer-column';
     switch (area) {
       case 'row':
         type = 'body-row';
@@ -1418,7 +1418,7 @@ class DataGrid extends Widget {
    * #### Notes
    * This will update the scroll bars and repaint as needed.
    */
-  private _resizeSection(type: 'body-row' | 'body-column' | 'header-row' | 'header-column', list: SectionList, index: number, size: number): void {
+  private _resizeSection(type: 'body-row' | 'body-column' | 'header-row' | 'header-column' | 'footer-row' | 'footer-column', list: SectionList, index: number, size: number): void {
 
     // Bail early if the index is out of range.
     if (index < 0 || index >= list.sectionCount) {
@@ -2163,12 +2163,14 @@ class DataGrid extends Widget {
       section_min = 40;
       list = this._rowHeaderSections;
       break;
-    case 'footer-row':      // Not handled yet
-      pos = y - this.headerHeight - Math.min(this.pageHeight, this.bodyHeight - 1);
+    case 'footer-row':
+      delta = dy;
+      section_min = 20;
       list = this._columnFooterSections;
       break;
     case 'footer-column':   // Not handled yet
-      pos = x - this.headerWidth - Math.min(this.pageWidth, this.bodyWidth - 1);
+      delta = dx;
+      section_min = 40;
       list = this._rowFooterSections;
       break;
     default:

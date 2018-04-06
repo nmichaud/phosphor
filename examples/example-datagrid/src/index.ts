@@ -41,7 +41,7 @@ class LargeDataModel extends DataModel {
     if (region === 'column-footer') {
       return `C: ${row}, ${column}`;
     }
-    if (region === 'corner-header') {
+    if (region === 'nw-corner') {
       return `N: ${row}, ${column}`;
     }
     return `(${row}, ${column})`;
@@ -79,7 +79,7 @@ class StreamingDataModel extends DataModel {
     if (region === 'column-header') {
       return `C: ${row}, ${column}`;
     }
-    if (region === 'corner-header') {
+    if (region === 'nw-corner') {
       return `N: ${row}, ${column}`;
     }
     return this._data[row][column];
@@ -141,7 +141,7 @@ class RandomDataModel extends DataModel {
     if (region === 'column-footer') {
       return `C: ${row}, ${column}`;
     }
-    if (region === 'corner-header') {
+    if (region === 'nw-corner') {
       return `N: ${row}, ${column}`;
     }
     return this._data[row * this._columnCount + column];
