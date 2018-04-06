@@ -3489,8 +3489,10 @@ class DataGrid extends Widget {
           rlist = this._rowHeaderSections;
           clist = this._columnHeaderSections;
 
-          hLineColor = this._style.headerHorizontalGridLineColor;
-          vLineColor = this._style.headerVerticalGridLineColor;
+          hLineColor = (this._style.headerHorizontalGridLineColor ||
+                        this._style.headerGridLineColor);
+          vLineColor = (this._style.headerVerticalGridLineColor ||
+                        this._style.headerGridLineColor);
           hgReverse = false;
           vgReverse = false;
           break;
@@ -3507,8 +3509,10 @@ class DataGrid extends Widget {
           rlist = this._rowHeaderSections;
           clist = this._columnFooterSections;
 
-          hLineColor = this._style.footerHorizontalGridLineColor;
-          vLineColor = this._style.headerVerticalGridLineColor;
+          hLineColor = (this._style.footerHorizontalGridLineColor ||
+                        this._style.footerGridLineColor);
+          vLineColor = (this._style.headerVerticalGridLineColor ||
+                        this._style.headerGridLineColor);
           hgReverse = true;
           vgReverse = false;
           break;
@@ -3525,8 +3529,10 @@ class DataGrid extends Widget {
           rlist = this._rowFooterSections;
           clist = this._columnHeaderSections;
 
-          hLineColor = this._style.headerHorizontalGridLineColor;
-          vLineColor = this._style.footerVerticalGridLineColor;
+          hLineColor = (this._style.headerHorizontalGridLineColor ||
+                        this._style.headerGridLineColor);
+          vLineColor = (this._style.footerVerticalGridLineColor ||
+                        this._style.footerGridLineColor);
           hgReverse = false;
           vgReverse = true;
           break;
@@ -3543,8 +3549,10 @@ class DataGrid extends Widget {
           rlist = this._rowFooterSections;
           clist = this._columnFooterSections;
 
-          hLineColor = this._style.footerHorizontalGridLineColor;
-          vLineColor = this._style.footerVerticalGridLineColor;
+          hLineColor = (this._style.footerHorizontalGridLineColor ||
+                        this._style.footerGridLineColor);
+          vLineColor = (this._style.footerVerticalGridLineColor ||
+                        this._style.footerGridLineColor);
           hgReverse = true;
           vgReverse = true;
           break;
@@ -3633,16 +3641,12 @@ class DataGrid extends Widget {
 
       // Draw the horizontal grid lines.
       this._drawHorizontalGridLines(rgn,
-        hLineColor ||
-        this._style.headerGridLineColor,
-        hgReverse
+        hLineColor,hgReverse
       );
 
       // Draw the vertical grid lines.
       this._drawVerticalGridLines(rgn,
-        vLineColor ||
-        this._style.headerGridLineColor,
-        vgReverse
+        vLineColor, vgReverse
       );
     }
   }
