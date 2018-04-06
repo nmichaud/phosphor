@@ -1693,16 +1693,95 @@ class DataGrid extends Widget {
       // Done
       break;
     }
-    case this._columnFooterSections:
+    case this._rowFooterSections:
     {
-      // TODO
+      // Look up the column header height.
+      let fx = this.headerWidth + Math.min(this.pageWidth, this.bodyWidth - 1);
+
+      // Look up the offset of the section.
+      let offset = list.sectionOffset(index) + fx;
+
+      // Bail early if the section is fully outside the viewport.
+      if (offset >= vpWidth) {
+        break;
+      }
+
+      // Paint the entire tail if the section spans the viewport.
+      if (offset + oldSize >= vpWidth || offset + newSize >= vpWidth) {
+        this._paint(offset, 0, vpWidth - offset, vpHeight);
+        break;
+      }
+
+      // Compute the blit content dimensions.
+      /*let sx = offset + oldSize;
+      let sy = 0;
+      let sw = vpWidth - sx;
+      let sh = vpHeight;
+      let dx = sx + delta;
+      let dy = 0;
+
+      // Blit the valid contents to the destination.
+      this._blit(this._canvas, sx, sy, sw, sh, dx, dy);
+
+      // Repaint the header section if needed.
+      if (newSize > 0) {
+        this._paint(offset, 0, newSize, vpHeight);
+      }
+
+      // Paint the trailing space if needed.
+      if (delta < 0) {
+        this._paint(vpWidth + delta, 0, -delta, vpHeight);
+      }*/
+
+      this._paint(offset, 0, vpWidth - offset, vpHeight);
+
+      // Done
       break;
     }
     case this._columnFooterSections:
     {
-      // TODO
-      break;
-    }
+      // Look up the column header height.
+      let fy = this.headerHeight + Math.min(this.pageHeight, this.bodyHeight - 1);
+
+      // Look up the offset of the section.
+      let offset = list.sectionOffset(index) + fy;
+
+      // Bail early if the section is fully outside the viewport.
+      if (offset >= vpHeight) {
+        break;
+      }
+
+      // Paint the entire tail if the section spans the viewport.
+      if (offset + oldSize >= vpHeight || offset + newSize >= vpHeight) {
+        this._paint(0, offset, vpWidth, vpHeight - offset);
+        break;
+      }
+
+      // Compute the blit content dimensions.
+      /*let sx = 0;
+      let sy = offset + oldSize;
+      let sw = vpWidth;
+      let sh = vpHeight - sy;
+      let dx = 0;
+      let dy = sy + delta;
+
+      // Blit the valid contents to the destination.
+      this._blit(this._canvas, sx, sy, sw, sh, dx, dy);
+
+      // Repaint the header section if needed.
+      if (newSize > 0) {
+        this._paint(0, offset, vpWidth, newSize);
+      }
+
+      // Paint the trailing space if needed.
+      if (delta < 0) {
+        this._paint(0, vpHeight + delta, vpWidth, -delta);
+      }*/
+
+      this._paint(0, offset, vpWidth, vpHeight - offset);
+
+      // Done
+      break;    }
     default:
       throw 'unreachable';
     }
@@ -1722,8 +1801,8 @@ class DataGrid extends Widget {
     let fw = this.footerWidth;
     let fh = this.footerHeight;
 
-    let pw = hw + fw + Math.min(this.pageWidth, this.bodyWidth);
-    let ph = hh + fh + Math.min(this.pageHeight, this.bodyHeight);
+    let fx = hw + Math.min(this.pageWidth, this.bodyWidth - 1);
+    let fy = hh + Math.min(this.pageHeight, this.bodyHeight - 1);
 
     // Convert the mouse position into local coordinates.
     let rect = this._viewport.node.getBoundingClientRect();
@@ -1731,44 +1810,59 @@ class DataGrid extends Widget {
     let y = clientY - rect.top;
 
     // Bail early if the mouse is not over a grid header.
-    if ((x >= hw && x <= pw - fw) && (y >= hh && y <= ph - fh)) {
+    if ((x >= hw && x <= fx) && (y >= hh && y <= fy)) {
       return null;
     }
 
     // Test for a match in the corner headers/footers first.
     if ((x <= hw + 2 && y <= hh + 2) || // top left
-        (x <= hw + 2 && y >= ph && y >= ph - fh + 2) || // bottom left
-        (x >= pw && x >= pw - hw + 2 && y <= hh + 2) || // top right
-        (x >= pw && x >= pw - hw + 2 && y >= ph && y >= ph - fh + 2)) { // bottom right
+        (x <= hw + 2 && y >= fy && y <= fy + fh + 2) || // bottom left
+        (x >= fx && x <= fx + fw + 2 && y <= hh + 2) || // top right
+        (x >= fx && x <= fx + fw + 2 && y >= fy && y <= fy + fh + 2)) { // bottom right
       // Set up the resize index data.
       let data: { index: number, delta: number } | null = null;
 
       // Check for a column match if applicable.
       if (y <= hh) {
         data = Private.findResizeIndex(this._rowHeaderSections, x);
-      }
 
-      // Return the column match if found.
-      if (data) {
-        return { type: 'header-column', index: data.index, delta: data.delta };
+        // Return the column match if found.
+        if (data) {
+          return { type: 'header-column', index: data.index, delta: data.delta };
+        }
+
+        data = Private.findResizeIndex(this._rowFooterSections, x - fx);
+
+        // Return the column match if found.
+        if (data) {
+          return { type: 'footer-column', index: data.index, delta: data.delta };
+        }
       }
 
       // Check for a row match if applicable.
       if (x <= hw) {
         data = Private.findResizeIndex(this._columnHeaderSections, y);
+
+        // Return the row match if found.
+        if (data) {
+          return { type: 'header-row', index: data.index, delta: data.delta };
+        }
+
+        data = Private.findResizeIndex(this._columnFooterSections, y - fy);
+
+        // Return the row match if found.
+        if (data) {
+          return { type: 'footer-row', index: data.index, delta: data.delta };
+        }
       }
 
-      // Return the row match if found.
-      if (data) {
-        return { type: 'header-row', index: data.index, delta: data.delta };
-      }
 
       // Otherwise, there was no match.
       return null;
     }
 
     // Test for a match in the column header/footer second.
-    if (y <= hh || (y >= ph - fh && y < ph)) {
+    if (y <= hh || (y >= fy && y < fy + fh)) {
       // Convert the position into unscrolled coordinates.
       let pos = x + this._scrollX - hw;
 
@@ -1785,7 +1879,7 @@ class DataGrid extends Widget {
     }
 
     // Test for a match in the row header/footer last.
-    if (x <= hw || (x >= pw - fw && x < pw)) {
+    if (x <= hw || (x >= fx && x < fx + fw)) {
       // Convert the position into unscrolled coordinates.
       let pos = y + this._scrollY - hh;
 
@@ -2070,7 +2164,13 @@ class DataGrid extends Widget {
       list = this._rowHeaderSections;
       break;
     case 'footer-row':      // Not handled yet
+      pos = y - this.headerHeight - Math.min(this.pageHeight, this.bodyHeight - 1);
+      list = this._columnFooterSections;
+      break;
     case 'footer-column':   // Not handled yet
+      pos = x - this.headerWidth - Math.min(this.pageWidth, this.bodyWidth - 1);
+      list = this._rowFooterSections;
+      break;
     default:
       throw 'unreachable';
     }
@@ -2591,7 +2691,7 @@ class DataGrid extends Widget {
       rList = this._columnHeaderSections;
       cList = this._columnSections;
       break;
-    case 'corner-header':
+    case 'nw-corner':
       rList = this._columnHeaderSections;
       cList = this._rowHeaderSections;
       break;
@@ -2689,7 +2789,7 @@ class DataGrid extends Widget {
       x1 += hw - this._scrollX;
       x2 += hw - this._scrollX;
       break;
-    case 'corner-header':
+    case 'nw-corner':
       xMax = Math.min(hw - 1, xMax);
       yMax = Math.min(hh - 1, yMax);
       break;
@@ -3442,106 +3542,199 @@ class DataGrid extends Widget {
    * Draw the corner header region which intersects the dirty rect.
    */
   private _drawCornerHeaderRegion(rx: number, ry: number, rw: number, rh: number): void {
-    // Get the visible content dimensions.
-    let contentW = this.headerWidth;
-    let contentH = this.headerHeight;
 
-    // Bail if there is no content to draw.
-    if (contentW <= 0 || contentH <= 0) {
-      return;
+    let hw = this.headerWidth;
+    let hh = this.headerHeight;
+    let fw = this.footerWidth;
+    let fh = this.footerHeight;
+
+    let fx = hw + Math.min(this.pageWidth, this.bodyWidth - 1);
+    let fy = hh + Math.min(this.pageHeight, this.bodyHeight - 1);
+
+    let region: DataModel.CellRegion = 'nw-corner';
+    let contentW: number = 0;
+    let contentH: number = 0;
+    let contentX: number = 0;
+    let contentY: number = 0;
+    let rlist: SectionList = this._rowHeaderSections;
+    let clist: SectionList = this._columnHeaderSections;
+    let hLineColor: string | undefined;
+    let vLineColor: string | undefined;
+    let hgReverse: boolean = false;
+    let vgReverse: boolean = false;
+
+    for (let i: number = 0; i < 4; ++i) {
+
+      switch (i) {
+        case 0:
+          region = 'nw-corner';
+          // Get the visible content dimensions.
+          contentW = hw;
+          contentH = hh;
+
+          // Get the visible content origin.
+          contentX = 0;
+          contentY = 0;
+
+          rlist = this._rowHeaderSections;
+          clist = this._columnHeaderSections;
+
+          hLineColor = this._style.headerHorizontalGridLineColor;
+          vLineColor = this._style.headerVerticalGridLineColor;
+          hgReverse = false;
+          vgReverse = false;
+          break;
+        case 1:
+          region = 'sw-corner';
+          // Get the visible content dimensions.
+          contentW = hw;
+          contentH = fh;
+
+          // Get the visible content origin.
+          contentX = 0;
+          contentY = fy;
+
+          rlist = this._rowHeaderSections;
+          clist = this._columnFooterSections;
+
+          hLineColor = this._style.footerHorizontalGridLineColor;
+          vLineColor = this._style.headerVerticalGridLineColor;
+          hgReverse = true;
+          vgReverse = false;
+          break;
+        case 2:
+          region = 'ne-corner';
+          // Get the visible content dimensions.
+          contentW = fw;
+          contentH = hh;
+
+          // Get the visible content origin.
+          contentX = fx;
+          contentY = 0;
+
+          rlist = this._rowFooterSections;
+          clist = this._columnHeaderSections;
+
+          hLineColor = this._style.headerHorizontalGridLineColor;
+          vLineColor = this._style.footerVerticalGridLineColor;
+          hgReverse = false;
+          vgReverse = true;
+          break;
+        case 3:
+          region = 'se-corner';
+          // Get the visible content dimensions.
+          contentW = fw;
+          contentH = fh;
+
+          // Get the visible content origin.
+          contentX = fx;
+          contentY = fy;
+
+          rlist = this._rowFooterSections;
+          clist = this._columnFooterSections;
+
+          hLineColor = this._style.footerHorizontalGridLineColor;
+          vLineColor = this._style.footerVerticalGridLineColor;
+          hgReverse = true;
+          vgReverse = true;
+          break;
+      }
+
+      // Bail if there is no content to draw.
+      if (contentW <= 0 || contentH <= 0) {
+        continue;
+      }
+
+      // Bail if the dirty rect does not intersect the content area.
+      if (rx + rw <= contentX) {
+        continue;
+      }
+      if (ry + rh <= contentY) {
+        continue;
+      }
+      if (rx >= contentX + contentW) {
+        continue;
+      }
+      if (ry >= contentY + contentH) {
+        continue;
+      }
+
+      // Get the upper and lower bounds of the dirty content area.
+      let x1 = Math.max(rx, contentX);
+      let y1 = Math.max(ry, contentY);
+      let x2 = Math.min(rx + rw - 1, contentX + contentW - 1);
+      let y2 = Math.min(ry + rh - 1, contentY + contentH - 1);
+
+      // Convert the dirty content bounds into cell bounds.
+      let r1 = clist.sectionIndex(y1 - contentY);
+      let c1 = rlist.sectionIndex(x1 - contentX);
+      let r2 = clist.sectionIndex(y2 - contentY);
+      let c2 = rlist.sectionIndex(x2 - contentX);
+
+      // Handle a dirty content area larger than the cell count.
+      if (r2 < 0) {
+        r2 = clist.sectionCount - 1;
+      }
+      if (c2 < 0) {
+        c2 = rlist.sectionCount - 1;
+      }
+
+      // Convert the cell bounds back to visible coordinates.
+      let x = rlist.sectionOffset(c1) + contentX;
+      let y = clist.sectionOffset(r1) + contentY;
+
+      // Set up the paint region size variables.
+      let width = 0;
+      let height = 0;
+
+      // Allocate the section sizes arrays.
+      let rowSizes = new Array<number>(r2 - r1 + 1);
+      let columnSizes = new Array<number>(c2 - c1 + 1);
+
+      // Get the row sizes for the region.
+      for (let j = r1; j <= r2; ++j) {
+        let size = clist.sectionSize(j);
+        rowSizes[j - r1] = size;
+        height += size;
+      }
+
+      // Get the column sizes for the region.
+      for (let i = c1; i <= c2; ++i) {
+        let size = rlist.sectionSize(i);
+        columnSizes[i - c1] = size;
+        width += size;
+      }
+
+      // Create the paint region object.
+      let rgn: Private.IPaintRegion = {
+        region: region,
+        xMin: x1, yMin: y1,
+        xMax: x2, yMax: y2,
+        x, y, width, height,
+        row: r1, column: c1,
+        rowSizes, columnSizes
+      };
+
+      // Draw the background.
+      this._drawBackground(rgn, this._style.headerBackgroundColor);
+
+      // Draw the cell content for the paint region.
+      this._drawCells(rgn);
+
+      // Draw the horizontal grid lines.
+      this._drawHorizontalGridLines(rgn,
+        hLineColor ||
+        this._style.headerGridLineColor,
+        hgReverse
+      );
+
+      // Draw the vertical grid lines.
+      this._drawVerticalGridLines(rgn,
+        vLineColor ||
+        this._style.headerGridLineColor,
+        vgReverse
+      );
     }
-
-    // Get the visible content origin.
-    let contentX = 0;
-    let contentY = 0;
-
-    // Bail if the dirty rect does not intersect the content area.
-    if (rx + rw <= contentX) {
-      return;
-    }
-    if (ry + rh <= contentY) {
-      return;
-    }
-    if (rx >= contentX + contentW) {
-      return;
-    }
-    if (ry >= contentY + contentH) {
-      return;
-    }
-
-    // Get the upper and lower bounds of the dirty content area.
-    let x1 = rx;
-    let y1 = ry;
-    let x2 = Math.min(rx + rw - 1, contentX + contentW - 1);
-    let y2 = Math.min(ry + rh - 1, contentY + contentH - 1);
-
-    // Convert the dirty content bounds into cell bounds.
-    let r1 = this._columnHeaderSections.sectionIndex(y1);
-    let c1 = this._rowHeaderSections.sectionIndex(x1);
-    let r2 = this._columnHeaderSections.sectionIndex(y2);
-    let c2 = this._rowHeaderSections.sectionIndex(x2);
-
-    // Handle a dirty content area larger than the cell count.
-    if (r2 < 0) {
-      r2 = this._columnHeaderSections.sectionCount - 1;
-    }
-    if (c2 < 0) {
-      c2 = this._rowHeaderSections.sectionCount - 1;
-    }
-
-    // Convert the cell bounds back to visible coordinates.
-    let x = this._rowHeaderSections.sectionOffset(c1);
-    let y = this._columnHeaderSections.sectionOffset(r1);
-
-    // Set up the paint region size variables.
-    let width = 0;
-    let height = 0;
-
-    // Allocate the section sizes arrays.
-    let rowSizes = new Array<number>(r2 - r1 + 1);
-    let columnSizes = new Array<number>(c2 - c1 + 1);
-
-    // Get the row sizes for the region.
-    for (let j = r1; j <= r2; ++j) {
-      let size = this._columnHeaderSections.sectionSize(j);
-      rowSizes[j - r1] = size;
-      height += size;
-    }
-
-    // Get the column sizes for the region.
-    for (let i = c1; i <= c2; ++i) {
-      let size = this._rowHeaderSections.sectionSize(i);
-      columnSizes[i - c1] = size;
-      width += size;
-    }
-
-    // Create the paint region object.
-    let rgn: Private.IPaintRegion = {
-      region: 'corner-header',
-      xMin: x1, yMin: y1,
-      xMax: x2, yMax: y2,
-      x, y, width, height,
-      row: r1, column: c1,
-      rowSizes, columnSizes
-    };
-
-    // Draw the background.
-    this._drawBackground(rgn, this._style.headerBackgroundColor);
-
-    // Draw the cell content for the paint region.
-    this._drawCells(rgn);
-
-    // Draw the horizontal grid lines.
-    this._drawHorizontalGridLines(rgn,
-      this._style.headerHorizontalGridLineColor ||
-      this._style.headerGridLineColor
-    );
-
-    // Draw the vertical grid lines.
-    this._drawVerticalGridLines(rgn,
-      this._style.headerVerticalGridLineColor ||
-      this._style.headerGridLineColor
-    );
   }
 
   /**
@@ -3873,7 +4066,7 @@ class DataGrid extends Widget {
         factor = -1;
       }
       // Fetch the size of the column.
-      let size = rgn.columnSizes[i] * factor;
+      let size = rgn.columnSizes[idx] * factor;
 
       // Skip zero sized columns.
       if (size === 0) {

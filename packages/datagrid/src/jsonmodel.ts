@@ -110,7 +110,7 @@ class JSONModel extends DataModel {
       field = this._headerFields[column];
       value = this._data[row][field.name];
       break;
-    case 'corner-header':
+    case 'nw-corner':
       field = this._headerFields[column];
       value = field.title || field.name;
       break;
