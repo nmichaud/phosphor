@@ -144,6 +144,10 @@ class DataGrid extends Widget {
     this._vScrollBar.addClass('p-DataGrid-scrollBar');
     this._hScrollBar.addClass('p-DataGrid-scrollBar');
     this._scrollCorner.addClass('p-DataGrid-scrollCorner');
+    this._vtScrollCorner = new Widget();
+    this._vbScrollCorner = new Widget();
+    this._hlScrollCorner = new Widget();
+    this._hrScrollCorner = new Widget();
 
     // Add the on-screen canvas to the viewport node.
     this._viewport.node.appendChild(this._canvas);
@@ -155,6 +159,10 @@ class DataGrid extends Widget {
     this._vScrollBar.hide();
     this._hScrollBar.hide();
     this._scrollCorner.hide();
+    this._hlScrollCorner.hide();
+    this._hrScrollCorner.hide();
+    this._vtScrollCorner.hide();
+    this._vbScrollCorner.hide();
 
     // Connect to the scroll bar signals.
     this._vScrollBar.thumbMoved.connect(this._onThumbMoved, this);
@@ -165,31 +173,43 @@ class DataGrid extends Widget {
     this._hScrollBar.stepRequested.connect(this._onStepRequested, this);
 
     // Set the layout cell config for the child widgets.
-    GridLayout.setCellConfig(this._viewport, { row: 0, column: 0 });
-    GridLayout.setCellConfig(this._vScrollBar, { row: 0, column: 1 });
-    GridLayout.setCellConfig(this._hScrollBar, { row: 1, column: 0 });
-    GridLayout.setCellConfig(this._scrollCorner, { row: 1, column: 1 });
+    GridLayout.setCellConfig(this._viewport, { row: 0, column: 0, rowSpan: 3, columnSpan: 3 });
+    GridLayout.setCellConfig(this._vtScrollCorner, { row: 0, column: 3 });
+    GridLayout.setCellConfig(this._vScrollBar, { row: 1, column: 3 });
+    GridLayout.setCellConfig(this._vbScrollCorner, { row: 2, column: 3 });
+    GridLayout.setCellConfig(this._hlScrollCorner, { row: 3, column: 0 });
+    GridLayout.setCellConfig(this._hScrollBar, { row: 3, column: 1 });
+    GridLayout.setCellConfig(this._hrScrollCorner, { row: 3, column: 2 });
+    GridLayout.setCellConfig(this._scrollCorner, { row: 3, column: 3 });
 
     // Create the layout for the data grid.
     let layout = new GridLayout({
-      rowCount: 2,
-      columnCount: 2,
+      rowCount: 4,
+      columnCount: 4,
       rowSpacing: 0,
       columnSpacing: 0,
       fitPolicy: 'set-no-constraint'
     });
 
     // Set the stretch factors for the grid.
-    layout.setRowStretch(0, 1);
-    layout.setRowStretch(1, 0);
-    layout.setColumnStretch(0, 1);
-    layout.setColumnStretch(1, 0);
+      layout.setRowStretch(0, 0);
+      layout.setRowStretch(1, 1);
+      layout.setRowStretch(2, 0);
+      layout.setRowStretch(3, 0);
+      layout.setColumnStretch(0, 0);
+      layout.setColumnStretch(1, 1);
+      layout.setColumnStretch(2, 0);
+      layout.setColumnStretch(3, 0);
 
     // Add the child widgets to the layout.
     layout.addWidget(this._viewport);
     layout.addWidget(this._vScrollBar);
     layout.addWidget(this._hScrollBar);
     layout.addWidget(this._scrollCorner);
+    layout.addWidget(this._vtScrollCorner);
+    layout.addWidget(this._vbScrollCorner);
+    layout.addWidget(this._hlScrollCorner);
+    layout.addWidget(this._hrScrollCorner);
 
     // Install the layout on the data grid.
     this.layout = layout;
@@ -1328,11 +1348,49 @@ class DataGrid extends Widget {
       needVScroll = (aph - hsh) < bh - 1;
     }
 
+    // The scrollbar handles are 15x15 px;
+    let shw = 0; //16;
+    let shh = 0; //16;
+    let hwpx = (this.headerWidth - shw)+"px";
+    let hhpx = (this.headerHeight - shh)+"px";
+    let fwpx = (this.footerWidth - shw)+"px";
+    let fhpx = (this.footerHeight - shh)+"px";
+
+    let sendFit = false;
+
+    if (this._hlScrollCorner.node.style.minWidth !== hwpx) {
+      this._hlScrollCorner.node.style.minWidth = hwpx;
+      sendFit = true;
+    }
+
+    if (this._vtScrollCorner.node.style.minHeight !== hhpx) {
+      this._vtScrollCorner.node.style.minHeight = hhpx;
+      sendFit = true;
+    }
+
+    if (this._hrScrollCorner.node.style.minWidth !== fwpx) {
+      this._hrScrollCorner.node.style.minWidth = fwpx;
+      sendFit = true;
+    }
+
+    if (this._vbScrollCorner.node.style.minHeight !== fhpx) {
+      this._vbScrollCorner.node.style.minHeight = fhpx;
+      sendFit = true;
+    }
+
     // If the visibility changes, immediately refit the grid.
     if (needVScroll !== hasVScroll || needHScroll !== hasHScroll) {
       this._vScrollBar.setHidden(!needVScroll);
       this._hScrollBar.setHidden(!needHScroll);
       this._scrollCorner.setHidden(!needVScroll || !needHScroll);
+      this._hlScrollCorner.setHidden(!needHScroll);
+      this._vtScrollCorner.setHidden(!needVScroll);
+      this._hrScrollCorner.setHidden(!needHScroll);
+      this._vbScrollCorner.setHidden(!needVScroll);
+      sendFit = true;
+    }
+
+    if (sendFit) {
       MessageLoop.sendMessage(this, Widget.Msg.FitRequest);
     }
 
@@ -1968,6 +2026,10 @@ class DataGrid extends Widget {
       // Update the viewport cursor.
       this._viewport.node.style.cursor = Private.cursorForHandle(handle);
 
+      if (handle === null) {
+        // Check if the mouse is hovering a cell
+      }
+
       // Done.
       return;
     }
@@ -2231,6 +2293,19 @@ class DataGrid extends Widget {
     // Bail if nothing needs to be painted.
     if (right <= 0 && bottom <= 0 && fw == 0 && fh == 0) {
       return;
+    }
+
+    // Account for resize
+    let uniformResizing = this.uniformResizing;
+    if (uniformResizing === 'all' || uniformResizing === 'body' || uniformResizing === 'body-column') {
+      let pw = this.pageWidth;
+      let colCount = this._columnSections.sectionCount || 1;
+      this.baseColumnSize = Math.floor( pw / colCount );
+    }
+    if (uniformResizing === 'all' || uniformResizing === 'body' || uniformResizing === 'body-row') {
+      let ph = this.pageHeight;
+      let rowCount = this._rowSections.sectionCount || 1;
+      this.baseRowSize = Math.floor( ph / rowCount );
     }
 
     // If there is a paint pending, ensure it paints everything.
@@ -3214,10 +3289,12 @@ class DataGrid extends Widget {
     );
 
     // Draw the vertical grid lines.
-    this._drawVerticalGridLines(rgn,
-      this._style.headerVerticalGridLineColor ||
-      this._style.headerGridLineColor
-    );
+    if (c2 == this._rowHeaderSections.sectionCount-1) {
+      this._drawVerticalGridLines(rgn,
+        this._style.headerVerticalGridLineColor ||
+        this._style.headerGridLineColor
+      );
+    }
   }
 
   /**
@@ -3986,7 +4063,7 @@ class DataGrid extends Widget {
    */
   private _drawHorizontalGridLines(rgn: Private.IPaintRegion, color: string | undefined, reverse: boolean = false): void {
     // Bail if there is no color to draw.
-    if (!color) {
+    if (!color || !this._model) {
       return;
     }
 
@@ -4024,10 +4101,47 @@ class DataGrid extends Widget {
       // Compute the Y position of the line.
       let pos = y + size - ((reverse === true) ? 0 : 1);
 
-      // Draw the line if it's in range of the dirty rect.
-      if (pos >= rgn.yMin && pos <= rgn.yMax) {
-        this._canvasGC.moveTo(x1, pos + 0.5);
-        this._canvasGC.lineTo(x2, pos + 0.5);
+      if (rgn.region == 'row-header') {
+        // Compute the column index.
+        let row = rgn.row + j;
+        let end = Math.min(this._rowHeaderSections.sectionCount - 1,
+                              rgn.column + rgn.columnSizes.length);
+        let x2 = this.totalWidth;
+        let colstart = 0; //rgn.column;
+        end = this._rowHeaderSections.sectionCount - 1;
+        for (let column = colstart; column < end; ++column) {
+          let value: any;
+          try {
+            value = this._model.data(rgn.region, row + 1, column);
+          } catch (err) {
+            console.error(err);
+          }
+          if (value != null) {
+            if (pos >= rgn.yMin && pos <= rgn.yMax) {
+              let x = 0; //rgn.x;
+              for (let c = 0; c < (column-colstart); ++c) {
+                x += this._rowHeaderSections.sectionSize(c);
+                //x += rgn.columnSizes[c];
+              }
+              this._canvasGC.moveTo(x, pos + 0.5); //Math.max(rgn.xMin, x), pos + 0.5);
+              this._canvasGC.lineTo(x2, pos + 0.5);
+            }
+            break;
+          }
+        }
+        // Draw the line if it's in range of the dirty rect.
+      } else {
+
+        if ((rgn.region === 'column-header' || rgn.region === 'nw-corner' || rgn.region === 'ne-corner') && (j != n-1)) {
+          y += size;
+          continue;
+        }
+
+        // Draw the line if it's in range of the dirty rect.
+        if (pos >= rgn.yMin && pos <= rgn.yMax) {
+          this._canvasGC.moveTo(x1, pos + 0.5);
+          this._canvasGC.lineTo(x2, pos + 0.5);
+        }
       }
 
       // Increment the running Y coordinate.
@@ -4044,13 +4158,20 @@ class DataGrid extends Widget {
    */
   private _drawVerticalGridLines(rgn: Private.IPaintRegion, color: string | undefined, reverse: boolean = false): void {
     // Bail if there is no color to draw.
-    if (!color) {
+    if (!color || !this._model) {
       return;
     }
 
     // Compute the Y bounds for the vertical lines.
-    let y1 = Math.max(rgn.yMin, rgn.y);
-    let y2 = Math.min(rgn.y + rgn.height, rgn.yMax + 1);
+    let y1: number = 0;
+    let y2: number = 0;
+    if (rgn.region === 'column-header' || rgn.region === 'nw-corner') {
+      y1 = Math.max(rgn.yMin, rgn.y + 7);
+      y2 = Math.min(rgn.y + rgn.height - 7, rgn.yMax + 1);
+    } else {
+      y1 = Math.max(rgn.yMin, rgn.y);
+      y2 = Math.min(rgn.y + rgn.height, rgn.yMax + 1);
+    }
 
     // Begin the path for the grid lines
     this._canvasGC.beginPath();
@@ -4082,10 +4203,47 @@ class DataGrid extends Widget {
       // Compute the X position of the line.
       let pos = x + size - ((reverse == true) ? 0 : 1);
 
-      // Draw the line if it's in range of the dirty rect.
-      if (pos >= rgn.xMin && pos <= rgn.xMax) {
-        this._canvasGC.moveTo(pos + 0.5, y1);
-        this._canvasGC.lineTo(pos + 0.5, y2);
+      if (rgn.region == 'column-header') {
+        // Compute the row index.
+        let column = rgn.column + i;
+        let end = Math.min(this._columnHeaderSections.sectionCount - 1,
+                              rgn.row + rgn.rowSizes.length);
+        let y2 = this.totalHeight;
+        let rowstart = 0; //rgn.row;
+        end = this._columnHeaderSections.sectionCount - 1;
+        for (let row = rowstart; row < end; ++row) {
+          let value: any = null;
+          try {
+            value = this._model.data(rgn.region, row, column + 1);
+          } catch (err) {
+            console.error(err);
+          }
+          if (value != null) {
+            if (pos >= rgn.xMin && pos <= rgn.xMax) {
+              let y = 0; //rgn.y;
+              for (let r = 0; r < (row-rowstart); ++r) {
+                y += this._columnHeaderSections.sectionSize(r);
+                //x += rgn.columnSizes[c];
+              }
+              this._canvasGC.moveTo(pos + 0.5, y);
+              this._canvasGC.lineTo(pos + 0.5, y2);
+            }
+            break;
+          }
+        }
+        // Draw the line if it's in range of the dirty rect.
+      } else {
+
+        if ((rgn.region === 'row-header' || rgn.region === 'nw-corner' || rgn.region === 'sw-corner') && (i != n-1)) {
+          x += size;
+          continue;
+        }
+
+        // Draw the line if it's in range of the dirty rect.
+        if (pos >= rgn.xMin && pos <= rgn.xMax) {
+          this._canvasGC.moveTo(pos + 0.5, y1);
+          this._canvasGC.lineTo(pos + 0.5, y2);
+        }
       }
 
       // Increment the running X coordinate.
@@ -4101,6 +4259,10 @@ class DataGrid extends Widget {
   private _vScrollBar: ScrollBar;
   private _hScrollBar: ScrollBar;
   private _scrollCorner: Widget;
+  private _vtScrollCorner: Widget;
+  private _vbScrollCorner: Widget;
+  private _hlScrollCorner: Widget;
+  private _hrScrollCorner: Widget;
 
   private _inPaint = false;
   private _paintPending = false;  // TODO: would like to get rid of this flag
@@ -4701,11 +4863,11 @@ namespace Private {
    * A mapping of resize handle types to cursor values.
    */
   const cursorMap = {
-    'body-row': 'ns-resize',
-    'body-column': 'ew-resize',
-    'header-row': 'ns-resize',
-    'header-column': 'ew-resize',
-    'footer-row': 'ns-resize',
-    'footer-column': 'ew-resize'
+    'body-row': 'row-resize',
+    'body-column': 'col-resize',
+    'header-row': 'row-resize',
+    'header-column': 'col-resize',
+    'footer-row': 'row-resize',
+    'footer-column': 'col-resize'
   };
 }

@@ -811,7 +811,7 @@ class DockPanel extends Widget {
   /**
    * Create a new tab bar for use by the panel.
    */
-  private _createTabBar(): TabBar<Widget> {
+  protected _createTabBar(): TabBar<Widget> {
     // Create the tab bar.
     let tabBar = this._renderer.createTabBar();
 
@@ -1454,9 +1454,9 @@ namespace Private {
     let ry = Math.round(target.height / 3);
 
     // If the mouse is not within an edge, indicate the entire area.
-    if (al > rx && ar > rx && at > ry && ab > ry) {
+    /*if (al > rx && ar > rx && at > ry && ab > ry) {
       return { zone: 'widget-all', target };
-    }
+    }*/
 
     // Scale the distances by the slenderness ratio.
     al /= rx;
