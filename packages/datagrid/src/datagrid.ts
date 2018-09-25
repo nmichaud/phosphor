@@ -402,6 +402,11 @@ class DataGrid extends Widget {
     // Update the internal mode.
     this._uniformResizing = value;
 
+    const pw = this.pageWidth;
+    const ph = this.pageHeight;
+    const colCount = this._columnSections.sectionCount || 1;
+    const rowCount = this._rowSections.sectionCount || 1;
+
     // Reset the baseSizes for the relevant sections.
     switch (value) {
       case 'all':
@@ -413,6 +418,8 @@ class DataGrid extends Widget {
       case 'body':
         this.resetSections('row');
         this.resetSections('column');
+        this.baseColumnSize = Math.floor( pw / colCount );
+        this.baseRowSize = Math.floor( ph / rowCount );
         break;
       case 'header':
         this.resetSections('row-header');
@@ -420,9 +427,11 @@ class DataGrid extends Widget {
         break;
       case 'body-row':
         this.resetSections('row');
+        this.baseRowSize = Math.floor( ph / rowCount );
         break;
       case 'body-column':
         this.resetSections('column');
+        this.baseColumnSize = Math.floor( pw / colCount );
         break;
       case 'header-row':
         this.resetSections('row-header');
