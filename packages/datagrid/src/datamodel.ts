@@ -93,6 +93,21 @@ abstract class DataModel {
   }
 
   /**
+   * User clicked on column header. Default implementation is a no-op.
+   *
+   * @param region - The column region of interest.
+   *
+   * @param column - The index of the column of interest.
+   *
+   * #### Notes
+   * The model is responsible for notifying the grid if any data has changed
+   * (through emitChanged)
+   */
+  columnHeaderClicked(region: DataModel.ColumnRegion, column: number): void {
+  }
+
+
+  /**
    * Emit the `changed` signal for the data model.
    *
    * #### Notes

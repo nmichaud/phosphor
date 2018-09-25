@@ -1141,6 +1141,9 @@ class DataGrid extends Widget {
    */
   handleEvent(event: Event): void {
     switch (event.type) {
+    case 'click':
+      this._evtClick(event as MouseEvent);
+      break;
     case 'mousedown':
       this._evtMouseDown(event as MouseEvent);
       break;
@@ -1173,6 +1176,7 @@ class DataGrid extends Widget {
     window.addEventListener('resize', this);
     this.node.addEventListener('wheel', this);
     this.node.addEventListener('mousedown', this);
+    this.node.addEventListener('click', this);
     this._viewport.node.addEventListener('mousemove', this);
     this.repaint(); // TODO actually need to fit the viewport ?
   }
@@ -1184,6 +1188,7 @@ class DataGrid extends Widget {
     window.removeEventListener('resize', this);
     this.node.removeEventListener('wheel', this);
     this.node.removeEventListener('mousedown', this);
+    this.node.removeEventListener('click', this);
     this._viewport.node.removeEventListener('mousemove', this);
     this._releaseMouse();
   }
@@ -1349,12 +1354,12 @@ class DataGrid extends Widget {
     }
 
     // The scrollbar handles are 15x15 px;
-    let shw = 0; //16;
-    let shh = 0; //16;
-    let hwpx = (this.headerWidth - shw)+"px";
-    let hhpx = (this.headerHeight - shh)+"px";
-    let fwpx = (this.footerWidth - shw)+"px";
-    let fhpx = (this.footerHeight - shh)+"px";
+    //let shw = 16;
+    //let shh = 16;
+    let hwpx = "0px"; //(this.headerWidth - shw)+"px";
+    let hhpx = "0px"; //(this.headerHeight - shh)+"px";
+    let fwpx = "0px"; //(this.footerWidth - shw)+"px";
+    let fhpx = "0px"; //(this.footerHeight - shh)+"px";
 
     let sendFit = false;
 
@@ -1968,6 +1973,46 @@ class DataGrid extends Widget {
     // Release the mouse if `Escape` is pressed.
     if (event.keyCode === 27) {
       this._releaseMouse();
+    }
+  }
+
+  /*
+   * Handle the `'click'` event for the data grid
+   */
+  private _evtClick(event: MouseEvent): void {
+    // Do nothing if the left mouse button is not pressed.
+    if (event.button !== 0) {
+      return;
+    }
+
+    // Extract the client position.
+    let { clientX, clientY } = event;
+
+    let hw = this.headerWidth;
+    let hh = this.headerHeight;
+
+    // Convert the mouse position into local coordinates.
+    let rect = this._viewport.node.getBoundingClientRect();
+    let x = clientX - rect.left;
+    let y = clientY - rect.top;
+
+    // Bail early
+    if (y > hh) {
+      return;
+    }
+
+    let pos = x;
+
+    let index = this._rowHeaderSections.sectionIndex(pos);
+    if (index !== -1) {
+      this._model!.columnHeaderClicked('row-header', index);
+    }
+
+    // Convert the position into unscrolled coordinates.
+    pos = x + this._scrollX - hw;
+    index = this._columnSections.sectionIndex(pos);
+    if (index !== -1) {
+      this._model!.columnHeaderClicked('body', index);
     }
   }
 
