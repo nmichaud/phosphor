@@ -1150,9 +1150,6 @@ class DataGrid extends Widget {
    */
   handleEvent(event: Event): void {
     switch (event.type) {
-    case 'click':
-      this._evtClick(event as MouseEvent);
-      break;
     case 'mousedown':
       this._evtMouseDown(event as MouseEvent);
       break;
@@ -1185,7 +1182,6 @@ class DataGrid extends Widget {
     window.addEventListener('resize', this);
     this.node.addEventListener('wheel', this);
     this.node.addEventListener('mousedown', this);
-    this.node.addEventListener('click', this);
     this._viewport.node.addEventListener('mousemove', this);
     this.repaint(); // TODO actually need to fit the viewport ?
   }
@@ -1197,7 +1193,6 @@ class DataGrid extends Widget {
     window.removeEventListener('resize', this);
     this.node.removeEventListener('wheel', this);
     this.node.removeEventListener('mousedown', this);
-    this.node.removeEventListener('click', this);
     this._viewport.node.removeEventListener('mousemove', this);
     this._releaseMouse();
   }
@@ -1985,46 +1980,6 @@ class DataGrid extends Widget {
     }
   }
 
-  /*
-   * Handle the `'click'` event for the data grid
-   */
-  private _evtClick(event: MouseEvent): void {
-    // Do nothing if the left mouse button is not pressed.
-    if (event.button !== 0) {
-      return;
-    }
-
-    // Extract the client position.
-    let { clientX, clientY } = event;
-
-    let hw = this.headerWidth;
-    let hh = this.headerHeight;
-
-    // Convert the mouse position into local coordinates.
-    let rect = this._viewport.node.getBoundingClientRect();
-    let x = clientX - rect.left;
-    let y = clientY - rect.top;
-
-    // Bail early
-    if (y > hh) {
-      return;
-    }
-
-    let pos = x;
-
-    let index = this._rowHeaderSections.sectionIndex(pos);
-    if (index !== -1) {
-      this._model!.columnHeaderClicked('row-header', index);
-    }
-
-    // Convert the position into unscrolled coordinates.
-    pos = x + this._scrollX - hw;
-    index = this._columnSections.sectionIndex(pos);
-    if (index !== -1) {
-      this._model!.columnHeaderClicked('body', index);
-    }
-  }
-
   /**
    * Handle the `'mousedown'` event for the data grid.
    */
@@ -2036,6 +1991,8 @@ class DataGrid extends Widget {
 
     // Extract the client position.
     let { clientX, clientY } = event;
+
+    this.node.addEventListener('mouseup', this);
 
     // Hit test the grid headers for a resize handle.
     let handle = this._hitTestResizeHandles(clientX, clientY);
@@ -2063,7 +2020,7 @@ class DataGrid extends Widget {
 
     // Add the extra document listeners.
     document.addEventListener('mousemove', this, true);
-    document.addEventListener('mouseup', this, true);
+    //document.addEventListener('mouseup', this, true);
     document.addEventListener('keydown', this, true);
     document.addEventListener('contextmenu', this, true);
   }
@@ -2111,6 +2068,38 @@ class DataGrid extends Widget {
     // Do nothing if the left mouse button is not released.
     if (event.button !== 0) {
       return;
+    }
+
+    if (!this._pressData) {
+      // Extract the client position.
+      let { clientX, clientY } = event;
+
+      let hw = this.headerWidth;
+      let hh = this.headerHeight;
+
+      // Convert the mouse position into local coordinates.
+      let rect = this._viewport.node.getBoundingClientRect();
+      let x = clientX - rect.left;
+      let y = clientY - rect.top;
+
+      // Bail early
+      if (y > hh) {
+        return;
+      }
+
+      let pos = x;
+
+      let index = this._rowHeaderSections.sectionIndex(pos);
+      if (index !== -1) {
+        this._model!.columnHeaderClicked('row-header', index);
+      }
+
+      // Convert the position into unscrolled coordinates.
+      pos = x + this._scrollX - hw;
+      index = this._columnSections.sectionIndex(pos);
+      if (index !== -1) {
+        this._model!.columnHeaderClicked('body', index);
+      }
     }
 
     // Stop the event when releasing the mouse.
@@ -2193,6 +2182,9 @@ class DataGrid extends Widget {
    */
   private _releaseMouse(): void {
     // Bail early if no drag is in progress.
+    this.node.removeEventListener('mouseup', this);
+
+
     if (!this._pressData) {
       return;
     }
@@ -2203,7 +2195,7 @@ class DataGrid extends Widget {
 
     // Remove the extra document listeners.
     document.removeEventListener('mousemove', this, true);
-    document.removeEventListener('mouseup', this, true);
+    //document.removeEventListener('mouseup', this, true);
     document.removeEventListener('keydown', this, true);
     document.removeEventListener('contextmenu', this, true);
   }
