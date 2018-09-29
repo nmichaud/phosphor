@@ -2020,7 +2020,7 @@ class DataGrid extends Widget {
 
     // Add the extra document listeners.
     document.addEventListener('mousemove', this, true);
-    //document.addEventListener('mouseup', this, true);
+    document.addEventListener('mouseup', this, true);
     document.addEventListener('keydown', this, true);
     document.addEventListener('contextmenu', this, true);
   }
@@ -2071,6 +2071,8 @@ class DataGrid extends Widget {
     }
 
     if (!this._pressData) {
+      this.node.removeEventListener('mouseup', this);
+
       // Extract the client position.
       let { clientX, clientY } = event;
 
@@ -2182,8 +2184,6 @@ class DataGrid extends Widget {
    */
   private _releaseMouse(): void {
     // Bail early if no drag is in progress.
-    this.node.removeEventListener('mouseup', this);
-
 
     if (!this._pressData) {
       return;
@@ -2195,7 +2195,7 @@ class DataGrid extends Widget {
 
     // Remove the extra document listeners.
     document.removeEventListener('mousemove', this, true);
-    //document.removeEventListener('mouseup', this, true);
+    document.removeEventListener('mouseup', this, true);
     document.removeEventListener('keydown', this, true);
     document.removeEventListener('contextmenu', this, true);
   }
