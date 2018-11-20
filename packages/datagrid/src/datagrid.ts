@@ -125,6 +125,9 @@ class DataGrid extends Widget {
     this._canvasGC = this._canvas.getContext('2d')!;
     this._bufferGC = this._buffer.getContext('2d')!;
 
+    // Create the edit input element
+    this._inputElement = Private.createInput();
+
     // Set up the on-screen canvas.
     this._canvas.style.position = 'absolute';
     this._canvas.style.top = '0px';
@@ -151,6 +154,9 @@ class DataGrid extends Widget {
 
     // Add the on-screen canvas to the viewport node.
     this._viewport.node.appendChild(this._canvas);
+
+    // Add the input element to the viewport
+    this._viewport.node.appendChild(this._inputElement);
 
     // Install the message hook for the viewport.
     MessageLoop.installMessageHook(this._viewport, this);
@@ -2089,18 +2095,40 @@ class DataGrid extends Widget {
         return;
       }
 
-      let pos = x;
+      let row = this._columnHeaderSections.sectionIndex(y);
+      let ypos = this._columnHeaderSections.sectionOffset(row);
+      let height = this._columnHeaderSections.sectionSize(row);
 
-      let index = this._rowHeaderSections.sectionIndex(pos);
-      if (index !== -1) {
-        this._model!.columnHeaderClicked('row-header', index);
+      let column = this._rowHeaderSections.sectionIndex(x);
+      if (column !== -1) {
+        this._model!.columnHeaderClicked('row-header', row, column);
+
+        if (row === this._columnHeaderSections.sectionCount - 1) {
+          // Show the input element
+          let xpos = this._rowHeaderSections.sectionOffset(column);
+          let width = this._rowHeaderSections.sectionSize(column);
+          if (this._model) {
+            Private.activateInput(this._model, this._inputElement, 'nw-corner',
+              row, column, xpos, ypos, width, height);
+          }
+        }
       }
 
       // Convert the position into unscrolled coordinates.
-      pos = x + this._scrollX - hw;
-      index = this._columnSections.sectionIndex(pos);
-      if (index !== -1) {
-        this._model!.columnHeaderClicked('body', index);
+      x += this._scrollX - hw;
+      column = this._columnSections.sectionIndex(x);
+      if (column !== -1) {
+        this._model!.columnHeaderClicked('body', row, column);
+
+        if (row === this._columnHeaderSections.sectionCount - 1) {
+          // Show the input element
+          let xpos = this._columnSections.sectionOffset(column) + hw - this._scrollX;
+          let width = this._columnSections.sectionSize(column);
+          if (this._model) {
+            Private.activateInput(this._model, this._inputElement, 'column-header',
+              row, column, xpos, ypos, width, height);
+          }
+        }
       }
     }
 
@@ -2346,12 +2374,12 @@ class DataGrid extends Widget {
     if (uniformResizing === 'all' || uniformResizing === 'body' || uniformResizing === 'body-column') {
       let pw = this.pageWidth;
       let colCount = this._columnSections.sectionCount || 1;
-      this.baseColumnSize = Math.floor( pw / colCount );
+      this.baseColumnSize = Math.max(100, Math.floor( pw / colCount ));
     }
     if (uniformResizing === 'all' || uniformResizing === 'body' || uniformResizing === 'body-row') {
       let ph = this.pageHeight;
       let rowCount = this._rowSections.sectionCount || 1;
-      this.baseRowSize = Math.floor( ph / rowCount );
+      this.baseRowSize = Math.max(100, Math.floor( ph / rowCount ));
     }
 
     // If there is a paint pending, ensure it paints everything.
@@ -4328,6 +4356,8 @@ class DataGrid extends Widget {
   private _canvasGC: CanvasRenderingContext2D;
   private _bufferGC: CanvasRenderingContext2D;
 
+  private _inputElement: HTMLInputElement;
+
   private _rowSections: SectionList;
   private _columnSections: SectionList;
   private _rowHeaderSections: SectionList;
@@ -4617,6 +4647,58 @@ namespace Private {
     canvas.width = 0;
     canvas.height = 0;
     return canvas;
+  }
+
+  /**
+   * Create a new zero-sized input element.
+   */
+  export
+  function createInput(): HTMLInputElement {
+    let input = document.createElement('input');
+    input.spellcheck = false;
+    input.style.display = 'none';
+    input.style.position = 'absolute';
+    input.style.width = '0px';
+    input.style.height = '0px';
+    input.classList.add('p-DataGrid-input');
+    return input;
+  }
+
+  export
+  function activateInput(model: DataModel, input: HTMLInputElement, region: DataModel.CellRegion, row: number, column: number,
+    x: number, y: number, width: number, height: number) {
+    input.style.display = 'block';
+    input.style.width = (width - 30) + 'px';
+    input.style.height = (height - 6) + 'px';
+    input.style.top = y + 'px';
+    input.style.left = x + 'px';
+    input.value = model.data(region, row, column) || '';
+
+    let dblclick = (event: Event) => { event.stopPropagation(); };
+    let keyup = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        model.cellEdited(region, row, column, input.value);
+        onblur();
+      } else if (event.key === 'Escape') {
+        model.cellEdited(region, row, column, input.value);
+        onblur();
+      }
+      model.cellEdited(region, row, column, input.value);
+    };
+
+    let onblur = () => {
+      input.removeEventListener('blur', onblur);
+      input.removeEventListener('dblclick', dblclick);
+      input.removeEventListener('keyup', keyup);
+      input.style.display = 'none';
+    }
+
+    input.addEventListener('blur', onblur);
+    input.addEventListener('dblclick', dblclick);
+    input.addEventListener('keyup', keyup);
+
+    input.select();
+    input.focus();
   }
 
   /**

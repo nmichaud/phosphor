@@ -97,15 +97,34 @@ abstract class DataModel {
    *
    * @param region - The column region of interest.
    *
-   * @param column - The index of the column of interest.
+   * @param row - The row index of the header that was clicked.
+   *
+   * @param column - The column index of the header that was clicked.
    *
    * #### Notes
    * The model is responsible for notifying the grid if any data has changed
    * (through emitChanged)
    */
-  columnHeaderClicked(region: DataModel.ColumnRegion, column: number): void {
+  columnHeaderClicked(region: DataModel.ColumnRegion, row: number, column: number): void {
   }
 
+  /**
+   * A cell was edited
+   *
+   * @param region - The cell region of interest.
+   *
+   * @param row - The row index of the cell of interest.
+   *
+   * @param column - The column index of the cell of interest.
+   *
+   * @param value - The value submitted by the user.
+   *
+   * #### Notes
+   * The model is responsible for notifying the grid if any data has changed
+   * (through emitChanged)
+   */
+  cellEdited(region: DataModel.CellRegion, row: number, column: number, value: any): void {
+  }
 
   /**
    * Emit the `changed` signal for the data model.
