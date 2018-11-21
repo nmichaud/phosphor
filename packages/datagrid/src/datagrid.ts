@@ -776,6 +776,22 @@ class DataGrid extends Widget {
   }
 
   /**
+   * Get whether to show the header edit on click of the last row.
+   *
+   */
+  get headerEditOnClick(): boolean {
+    return this._headerEditOnClick;
+  }
+
+  /**
+   * Set whether to show the header edit on click of the last row.
+   *
+   */
+  set headerEditOnClick(value: boolean) {
+    this._headerEditOnClick = value;
+  }
+
+  /**
    * Get the size of a section in the data grid.
    *
    * @param area - The grid area for the section of interest.
@@ -2103,7 +2119,7 @@ class DataGrid extends Widget {
       if (column !== -1) {
         this._model!.columnHeaderClicked('row-header', row, column);
 
-        if (row === this._columnHeaderSections.sectionCount - 1) {
+        if (this._headerEditOnClick && row === this._columnHeaderSections.sectionCount - 1) {
           // Show the input element
           let xpos = this._rowHeaderSections.sectionOffset(column);
           let width = this._rowHeaderSections.sectionSize(column);
@@ -2120,7 +2136,7 @@ class DataGrid extends Widget {
       if (column !== -1) {
         this._model!.columnHeaderClicked('body', row, column);
 
-        if (row === this._columnHeaderSections.sectionCount - 1) {
+        if (this._headerEditOnClick && row === this._columnHeaderSections.sectionCount - 1) {
           // Show the input element
           let xpos = this._columnSections.sectionOffset(column) + hw - this._scrollX;
           let width = this._columnSections.sectionSize(column);
@@ -4373,6 +4389,8 @@ class DataGrid extends Widget {
   private _headerVisibility: DataGrid.HeaderVisibility;
   private _footerVisibility: DataGrid.FooterVisibility;
   private _uniformResizing: DataGrid.UniformResizing;
+
+  private _headerEditOnClick: boolean = false;
 }
 
 
