@@ -78,6 +78,7 @@ class DataGrid extends Widget {
     this._uniformResizing = options.uniformResizing || 'none';
     this._cellRenderers = options.cellRenderers || new RendererMap();
     this._defaultRenderer = options.defaultRenderer || new TextRenderer();
+    this._tooltipFormatter = options.tooltipFormatter || null;
 
     // Connect to the renderer map changed signal
     this._cellRenderers.changed.connect(this._onRenderersChanged, this);
@@ -128,6 +129,9 @@ class DataGrid extends Widget {
     // Create the edit input element
     this._inputElement = Private.createInput();
 
+    // Create the tooltip element
+    this._tooltipElement = Private.createTooltip();
+
     // Set up the on-screen canvas.
     this._canvas.style.position = 'absolute';
     this._canvas.style.top = '0px';
@@ -157,6 +161,10 @@ class DataGrid extends Widget {
 
     // Add the input element to the viewport
     this._viewport.node.appendChild(this._inputElement);
+
+    // Add tooltip element to the document body
+    let body = document.getElementsByTagName('body')[0];
+    body.appendChild(this._tooltipElement);
 
     // Install the message hook for the viewport.
     MessageLoop.installMessageHook(this._viewport, this);
@@ -233,6 +241,11 @@ class DataGrid extends Widget {
     this._rowFooterSections.clear();
     this._columnHeaderSections.clear();
     this._columnFooterSections.clear();
+
+    // Add tooltip element to the document body
+    let body = document.getElementsByTagName('body')[0];
+    body.removeChild(this._tooltipElement);
+
     super.dispose();
   }
 
@@ -341,6 +354,26 @@ class DataGrid extends Widget {
 
     // Schedule a full repaint of the grid.
     this.repaint();
+  }
+
+  /**
+   * Get the tooltip formatter for the data grid.
+   */
+  get tooltipFormatter(): TextRenderer.FormatFunc | null {
+    return this._tooltipFormatter;
+  }
+
+  /**
+   * Set the tooltip formatter for the data grid.
+   */
+  set tooltipFormatter(value: TextRenderer.FormatFunc | null ) {
+    // Bail if the formatter does not change.
+    if (this._tooltipFormatter === value) {
+      return;
+    }
+
+    // Update the internal formatter.
+    this._tooltipFormatter = value;
   }
 
   /**
@@ -1181,6 +1214,9 @@ class DataGrid extends Widget {
     case 'mouseup':
       this._evtMouseUp(event as MouseEvent);
       break;
+    case 'mouseout':
+      Private.hideTooltip(this._tooltipElement);
+      break;
     case 'wheel':
       this._evtWheel(event as WheelEvent);
       break;
@@ -1205,6 +1241,7 @@ class DataGrid extends Widget {
     this.node.addEventListener('wheel', this);
     this.node.addEventListener('mousedown', this);
     this._viewport.node.addEventListener('mousemove', this);
+    this._viewport.node.addEventListener('mouseout', this);
     this.repaint(); // TODO actually need to fit the viewport ?
   }
 
@@ -1216,6 +1253,7 @@ class DataGrid extends Widget {
     this.node.removeEventListener('wheel', this);
     this.node.removeEventListener('mousedown', this);
     this._viewport.node.removeEventListener('mousemove', this);
+    this._viewport.node.removeEventListener('mouseout', this);
     this._releaseMouse();
   }
 
@@ -1880,6 +1918,113 @@ class DataGrid extends Widget {
   }
 
   /**
+   * Hit test the grid for a hover.
+   */
+  private _hitTestCell(clientX: number, clientY: number): void {
+    if (this._tooltipFormatter === null || clientX === -1 || clientY === -1) {
+      // Bail if no tooltip formatter
+      return;
+    }
+
+    // Look up the header dimensions.
+    let hw = this.headerWidth;
+    let hh = this.headerHeight;
+
+    let fw = this.footerWidth;
+    let fh = this.footerHeight;
+
+    let fx = hw + Math.min(this.pageWidth, this.bodyWidth - 1);
+    let fy = hh + Math.min(this.pageHeight, this.bodyHeight - 1);
+
+    // Convert the mouse position into local coordinates.
+    let rect = this._viewport.node.getBoundingClientRect();
+    let x = clientX - rect.left;
+    let y = clientY - rect.top;
+
+    let region: DataModel.CellRegion;
+
+    if (y < hh) {
+      if (x < hw) {
+        region = 'nw-corner';
+      } else if (x >= fx && x < fx + fw) {
+        region = 'ne-corner';
+      } else {
+        region = 'column-header';
+      }
+    } else if (y >= fy && y < fy + fh) {
+      if (x < hw) {
+        region = 'sw-corner';
+      } else if (x >= fx && x < fx + fw) {
+        region = 'se-corner';
+      } else {
+        region = 'column-footer';
+      }
+    } else {
+      if (x < hw) {
+        region = 'row-header';
+      } else if (x >= fx && x < fx + fw) {
+        region = 'row-footer';
+      } else {
+        region = 'body';
+      }
+    }
+
+    let sectionList: SectionList;
+    let xpos = x;
+    let ypos = y;
+
+    if (x < hw) {
+      sectionList = this._rowHeaderSections;
+    } else if (x >= fx) {
+      xpos = x - fx;
+      sectionList = this._rowFooterSections;
+    } else {
+      xpos = x + this._scrollX - hw;
+      sectionList = this._columnSections;
+    }
+    let column = sectionList.sectionIndex(xpos);
+    let width = sectionList.sectionSize(column);
+    xpos -= sectionList.sectionOffset(column);
+
+    if (y < hh) {
+      sectionList = this._columnHeaderSections;
+    } else if (y >= fy) {
+      ypos = y - fy;
+      sectionList = this._columnFooterSections;
+    } else {
+      ypos = y + this._scrollY - hh;
+      sectionList = this._rowSections;
+    }
+    let row = sectionList.sectionIndex(ypos);
+    let height = sectionList.sectionSize(row);
+    ypos -= sectionList.sectionOffset(row);
+
+    if (this._model && region && row !== -1 && column !== -1) {
+      try {
+
+        let config = {
+          x: xpos, y: ypos, width: width, height: height,
+          region: region, row: row, column: column,
+          metadata: this._model.metadata(region, column),
+          value: this._model.tooltip(region, row, column)
+        };
+
+        let value = this._tooltipFormatter(config);
+        if (value === '') {
+          Private.hideTooltip(this._tooltipElement);
+        } else {
+          Private.showTooltip(this._tooltipElement, this._viewport.node.getBoundingClientRect(),
+            region, row, column, x, y, width, height, value);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      Private.hideTooltip(this._tooltipElement);      
+    }
+  }
+
+  /**
    * Hit test the grid headers for a resize handle.
    */
   private _hitTestResizeHandles(clientX: number, clientY: number): Private.IResizeHandle | null {
@@ -2061,6 +2206,11 @@ class DataGrid extends Widget {
 
       if (handle === null) {
         // Check if the mouse is hovering a cell
+        this._hitTestCell(event.clientX, event.clientY);
+        this._clientX = event.clientX;
+        this._clientY = event.clientY;
+      } else {
+        Private.hideTooltip(this._tooltipElement);
       }
 
       // Done.
@@ -2551,6 +2701,8 @@ class DataGrid extends Widget {
     default:
       throw 'unreachable';
     }
+    // Handle hover
+    this._hitTestCell(this._clientX, this._clientY);
   }
 
   /**
@@ -4359,6 +4511,11 @@ class DataGrid extends Widget {
   private _pressData: Private.IPressData | null = null;
   private _dpiRatio = Math.ceil(window.devicePixelRatio);
 
+  private _clientX = -1;
+  private _clientY = -1;
+  private _tooltipFormatter: TextRenderer.FormatFunc | null;
+  private _tooltipElement: HTMLDivElement;
+
   private _scrollX = 0;
   private _scrollY = 0;
   private _viewportWidth = 0;
@@ -4622,6 +4779,13 @@ namespace DataGrid {
      * The default is a new `TextRenderer`.
      */
     defaultRenderer?: CellRenderer;
+
+    /**
+     * The tooltip formatterfor the data grid.
+     *
+     * The default is null
+     */
+    tooltipFormatter?: TextRenderer.FormatFunc;
   }
 
   /**
@@ -4665,6 +4829,37 @@ namespace Private {
     canvas.width = 0;
     canvas.height = 0;
     return canvas;
+  }
+
+  /**
+   * Create a new tooltip element.
+   */
+  export
+  function createTooltip(): HTMLDivElement {
+    let tooltip = document.createElement('div');
+    tooltip.style.display = 'none';
+    tooltip.style.position = 'absolute';
+    tooltip.classList.add('p-DataGrid-tooltip');
+    return tooltip;
+  }
+
+  /**
+   * Show the tooltip.
+   */
+  export
+  function showTooltip(tooltip: HTMLDivElement, rect: ClientRect, region: DataModel.CellRegion,
+    row: number, column: number, x: number, y: number,
+    width: number, height: number, value: string) : void {
+    tooltip.innerText = value;
+
+    tooltip.style.display = 'block';
+    tooltip.style.top = rect.top + (y + 14) + 'px';
+    tooltip.style.left = rect.left + (x + 12) + 'px';
+  }
+
+  export
+  function hideTooltip(tooltip: HTMLDivElement) : void {
+    tooltip.style.display = 'none';
   }
 
   /**
