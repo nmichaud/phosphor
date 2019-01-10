@@ -4850,11 +4850,26 @@ namespace Private {
   function showTooltip(tooltip: HTMLDivElement, rect: ClientRect, region: DataModel.CellRegion,
     row: number, column: number, x: number, y: number,
     width: number, height: number, value: string) : void {
-    tooltip.innerText = value;
+    tooltip.innerHTML = value;
 
-    tooltip.style.display = 'block';
-    tooltip.style.top = rect.top + (y + 14) + 'px';
-    tooltip.style.left = rect.left + (x + 12) + 'px';
+    tooltip.style.display = 'grid';
+    let posx = rect.left + x;
+    if (posx > window.innerWidth / 2) {
+      tooltip.style.left = null;
+      tooltip.style.right = (window.innerWidth - posx) + 'px';
+    } else {
+      tooltip.style.left = (posx + 12) + 'px';
+      tooltip.style.right = null;
+    }
+
+    let posy = rect.top + y;
+    if (posy > window.innerHeight / 2) {
+      tooltip.style.top = null;
+      tooltip.style.bottom = (window.innerHeight - posy) + 'px';
+    } else {
+      tooltip.style.top = (posy + 14) + 'px';
+      tooltip.style.bottom = null;
+    }
   }
 
   export
