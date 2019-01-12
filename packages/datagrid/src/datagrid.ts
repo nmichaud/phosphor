@@ -2074,7 +2074,7 @@ class DataGrid extends Widget {
       }
 
       // Check for a row match if applicable.
-      if (x <= hw) {
+      /*if (x <= hw) {
         data = Private.findResizeIndex(this._columnHeaderSections, y);
 
         // Return the row match if found.
@@ -2088,8 +2088,7 @@ class DataGrid extends Widget {
         if (data) {
           return { type: 'footer-row', index: data.index, delta: data.delta };
         }
-      }
-
+      }*/
 
       // Otherwise, there was no match.
       return null;
@@ -2113,7 +2112,10 @@ class DataGrid extends Widget {
     }
 
     // Test for a match in the row header/footer last.
-    if (x <= hw || (x >= fx && x < fx + fw)) {
+    let uniformResizing = this.uniformResizing;
+    if ((uniformResizing === 'body' || uniformResizing === 'body-row') &&
+        (x <= hw || (x >= fx && x < fx + fw))) {
+    //if (x <= hw || (x >= fx && x < fx + fw)) {
       // Convert the position into unscrolled coordinates.
       let pos = y + this._scrollY - hh;
 
@@ -2323,6 +2325,33 @@ class DataGrid extends Widget {
     // Extract the delta X and Y movement.
     let dx = event.deltaX;
     let dy = event.deltaY;
+
+    // Zoom if the `Shift` key is held.
+    let uniformResizing = this.uniformResizing;
+    if (event.shiftKey && (uniformResizing === 'all' || uniformResizing === 'body')) {
+
+      // Convert the mouse position into local coordinates
+      let rect = this._viewport.node.getBoundingClientRect();
+      let x = event.clientX - rect.left + (this._scrollX - this.headerWidth);
+      let y = event.clientY - rect.top + (this._scrollY - this.headerHeight);
+
+      // Bail if the mouse isn't over the body
+      if (y >= 0) {
+        let row = this._rowSections.sectionIndex(y);
+        let column = this._columnSections.sectionIndex(x);
+
+        let scale = (event.deltaX > 0) ? 1.1 : 0.9;
+        let rowSize = Math.max(20, this._rowSections.baseSize * scale);
+        let colSize = Math.max(40, this._columnSections.baseSize * scale);
+
+        this._resizeSection('body-row', this._rowSections, row, rowSize);
+        this._resizeSection('body-column', this._columnSections, column, colSize);
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
 
     // Convert the delta values to pixel values.
     switch (event.deltaMode) {
@@ -2536,7 +2565,7 @@ class DataGrid extends Widget {
     }
 
     // Account for resize
-    let uniformResizing = this.uniformResizing;
+    /*let uniformResizing = this.uniformResizing;
     if (uniformResizing === 'all' || uniformResizing === 'body' || uniformResizing === 'body-column') {
       let pw = this.pageWidth;
       let colCount = this._columnSections.sectionCount || 1;
@@ -2546,7 +2575,7 @@ class DataGrid extends Widget {
       let ph = this.pageHeight;
       let rowCount = this._rowSections.sectionCount || 1;
       this.baseRowSize = Math.max(100, Math.floor( ph / rowCount ));
-    }
+    }*/
 
     // If there is a paint pending, ensure it paints everything.
     if (this._paintPending) {
