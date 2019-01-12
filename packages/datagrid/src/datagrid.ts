@@ -4847,29 +4847,30 @@ namespace Private {
    * Show the tooltip.
    */
   export
-  function showTooltip(tooltip: HTMLDivElement, rect: ClientRect, region: DataModel.CellRegion,
+  function showTooltip(tooltip: HTMLDivElement, viewportRect: ClientRect, region: DataModel.CellRegion,
     row: number, column: number, x: number, y: number,
     width: number, height: number, value: string) : void {
     tooltip.innerHTML = value;
-
     tooltip.style.display = 'grid';
-    let posx = rect.left + x;
-    if (posx > window.innerWidth / 2) {
-      tooltip.style.left = null;
-      tooltip.style.right = (window.innerWidth - posx) + 'px';
-    } else {
-      tooltip.style.left = (posx + 12) + 'px';
-      tooltip.style.right = null;
-    }
 
-    let posy = rect.top + y;
-    if (posy > window.innerHeight / 2) {
-      tooltip.style.top = null;
-      tooltip.style.bottom = (window.innerHeight - posy) + 'px';
-    } else {
-      tooltip.style.top = (posy + 14) + 'px';
-      tooltip.style.bottom = null;
+    let [xshift, yshift] = [12, 14];
+    let tooltipRect = tooltip.getBoundingClientRect();
+
+    let posx = viewportRect.left + x + xshift;
+    if (posx + tooltipRect.width > window.innerWidth - xshift) {
+      posx = window.innerWidth - xshift - tooltipRect.width;
     }
+    tooltip.style.left = posx + 'px';
+
+    let posy = viewportRect.top + y + yshift;
+    if (posy + tooltipRect.height > window.innerHeight - yshift) {
+      if (posx === window.innerWidth - xshift - tooltipRect.width) {
+        posy = posy - tooltipRect.height - 2*yshift;
+      } else {
+        posy = window.innerHeight - yshift - tooltipRect.height;
+      }
+    }
+    tooltip.style.top = posy + 'px';
   }
 
   export
