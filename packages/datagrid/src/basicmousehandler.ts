@@ -29,6 +29,14 @@ import {
   SelectionModel
 } from './selectionmodel';
 
+import {
+  TextRenderer
+} from './textrenderer';
+
+import {
+  CellRenderer
+} from './cellrenderer';
+
 
 /**
  * A basic implementation of a data grid mouse handler.
@@ -38,6 +46,25 @@ import {
  */
 export
 class BasicMouseHandler implements DataGrid.IMouseHandler {
+  /**
+   * Construct a new mouse handler.
+   *
+   * @param options - The options for initializing the data grid.
+   */
+  constructor(options: BasicMouseHandler.IOptions) {
+    this._tooltipFormatter = options.tooltipFormatter || null;
+
+    // Create the tooltip element
+    this._tooltipElement = Private.createTooltip();
+
+    options.dataModel.changed.connect(this.onDataModelChanged, this);
+
+    // Add tooltip element to the document body
+    let body = document.getElementsByTagName('body')[0];
+    body.appendChild(this._tooltipElement);
+  }
+
+
   /**
    * Dispose of the resources held by the mouse handler.
    */
@@ -49,6 +76,10 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
 
     // Release any held resources.
     this.release();
+
+    // Remove tooltip element from the document body
+    let body = document.getElementsByTagName('body')[0];
+    body.removeChild(this._tooltipElement);
 
     // Mark the handler as disposed.
     this._disposed = true;
@@ -80,6 +111,20 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
     this._pressData = null;
   }
 
+  onDataModelChanged(sender: DataModel, args: DataModel.ChangedArgs): void {
+    if (this._hoverData && this._tooltipFormatter) {
+      let {config} = this._hoverData;
+      let conf = {
+        ...config,
+        metadata: sender.metadata(config.region, config.row, config.column),
+        value: sender.tooltip(config.region, config.row, config.column)
+      }
+
+      let val = this._tooltipFormatter(conf);
+      Private.showTooltip(this._tooltipElement, this._hoverData, val);
+    }
+  }
+
   /**
    * Handle the mouse hover event for the data grid.
    *
@@ -101,6 +146,35 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
     grid.viewport.node.style.cursor = cursor;
 
     // TODO support user-defined hover items
+    if (hit.region !== 'void' && grid.dataModel && this._tooltipFormatter) {
+      try {
+
+        let config = {
+          x: hit.x, y: hit.y, width: hit.width, height: hit.height,
+          region: hit.region, row: hit.row, column: hit.column,
+          metadata: grid.dataModel.metadata(hit.region, hit.row, hit.column),
+          value: grid.dataModel.tooltip(hit.region, hit.row, hit.column)
+        };
+
+        this._hoverData = {
+          config, clientX: event.clientX, clientY: event.clientY
+        }
+
+        let value = this._tooltipFormatter(config);
+        if (value === '') {
+          Private.hideTooltip(this._tooltipElement);
+          this._hoverData = null;
+        } else {
+          Private.showTooltip(this._tooltipElement, this._hoverData, value);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      Private.hideTooltip(this._tooltipElement);      
+      this._hoverData = null;
+    }
+
   }
 
   /**
@@ -112,6 +186,8 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
    */
   onMouseLeave(grid: DataGrid, event: MouseEvent): void {
     // TODO support user-defined hover popups.
+    Private.hideTooltip(this._tooltipElement);
+    this._hoverData = null;
 
     // Clear the viewport cursor.
     grid.viewport.node.style.cursor = '';
@@ -130,6 +206,10 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
 
     // Hit test the grid.
     let hit = grid.hitTest(clientX, clientY);
+
+    // Hide tooltip
+    Private.hideTooltip(this._tooltipElement);
+    this._hoverData = null;
 
     // Unpack the hit test.
     let { region, row, column } = hit;
@@ -497,6 +577,8 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
    */
   onContextMenu(grid: DataGrid, event: MouseEvent): void {
     // TODO support user-defined context menus
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   /**
@@ -539,6 +621,36 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
 
   private _disposed = false;
   private _pressData: Private.PressData | null;
+
+  private _hoverData: Private.HoverData | null;
+  private _tooltipFormatter: TextRenderer.FormatFunc | null;
+  private _tooltipElement: HTMLDivElement;
+}
+
+
+/**
+ * The namespace for the `BasicMouseHandler` class statics.
+ */
+export
+namespace BasicMouseHandler {
+  /**
+   * An options object for initializing a data grid.
+   */
+  export
+  interface IOptions {
+    /**
+     * The data model
+     *
+     */
+    dataModel: DataModel;
+
+    /**
+     * The tooltip formatterfor the data grid.
+     *
+     * The default is null
+     */
+    tooltipFormatter?: TextRenderer.FormatFunc;
+  }
 }
 
 
@@ -669,6 +781,27 @@ namespace Private {
    */
   export
   type PressData = RowResizeData | ColumnResizeData | SelectData ;
+
+  /**
+   * A type alias for the hover data.
+   */
+  export
+  type HoverData = {
+    /**
+     * The config for the cell being hovered.
+     */
+    readonly config: CellRenderer.CellConfig;
+
+    /**
+     * The original client x position of the mouse.
+     */
+    readonly clientX: number;
+
+    /**
+     * The original client y position of the mouse.
+     */
+    readonly clientY: number;
+  };
 
   /**
    * A type alias for the resize handle types.
@@ -865,4 +998,49 @@ namespace Private {
     bottom: 'ns-resize',
     none: 'default'
   };
+
+  /**
+   * Create a new tooltip element.
+   */
+  export
+  function createTooltip(): HTMLDivElement {
+    let tooltip = document.createElement('div');
+    tooltip.style.display = 'none';
+    tooltip.style.position = 'absolute';
+    tooltip.classList.add('p-DataGrid-tooltip');
+    return tooltip;
+  }
+
+  /**
+   * Show the tooltip.
+   */
+  export
+  function showTooltip(tooltip: HTMLDivElement, hoverData: HoverData, value: string) : void {
+    tooltip.innerHTML = value;
+    tooltip.style.display = 'grid';
+
+    let [xshift, yshift] = [12, 14];
+    let tooltipRect = tooltip.getBoundingClientRect();
+
+    let posx = hoverData.clientX + xshift;
+    if (posx + tooltipRect.width > window.innerWidth - xshift) {
+      posx = window.innerWidth - xshift - tooltipRect.width;
+    }
+    tooltip.style.left = posx + 'px';
+
+    let posy = hoverData.clientY + yshift;
+    if (posy + tooltipRect.height > window.innerHeight - yshift) {
+      if (posx === window.innerWidth - xshift - tooltipRect.width) {
+        posy = posy - tooltipRect.height - 2*yshift;
+      } else {
+        posy = window.innerHeight - yshift - tooltipRect.height;
+      }
+    }
+    tooltip.style.top = posy + 'px';
+  }
+
+  export
+  function hideTooltip(tooltip: HTMLDivElement) : void {
+    tooltip.style.display = 'none';
+  }
 }

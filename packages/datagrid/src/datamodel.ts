@@ -69,7 +69,25 @@ abstract class DataModel {
   abstract data(region: DataModel.CellRegion, row: number, column: number): any;
 
   /**
-   * Get the metadata for a cell in the data model.
+   * Get the tooltip value for a cell in the data model.
+   *
+   * @param region - The cell region of interest.
+   *
+   * @param row - The row index of the cell of interest.
+   *
+   * @param column - The column index of the cell of interest.
+   *
+   * @param returns - The tooltip value for the specified cell.
+   *
+   * #### Notes
+   * This method is called often, and so should be efficient.
+   */
+  tooltip(region: DataModel.CellRegion, row: number, column: number): any {
+    return this.data(region, row, column);
+  }
+
+  /**
+   * Get the metadata for a column in the data model.
    *
    * @param region - The cell region of interest.
    *
