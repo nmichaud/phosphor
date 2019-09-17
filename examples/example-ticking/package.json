@@ -1,0 +1,25 @@
+{
+  "name": "@phosphor/example-ticking",
+  "version": "0.1.12",
+  "private": true,
+  "scripts": {
+    "build": "tsc && webpack",
+    "clean": "rimraf build"
+  },
+  "dependencies": {
+    "@phosphor/datagrid": "^0.1.11",
+    "@phosphor/default-theme": "^0.1.5",
+    "@phosphor/dragdrop": "^1.4.0",
+    "@phosphor/widgets": "^1.9.0",
+    "es6-promise": "^4.0.5"
+  },
+  "devDependencies": {
+    "css-loader": "^0.26.1",
+    "file-loader": "^0.11.1",
+    "url-loader": "^1.0.0",
+    "rimraf": "^2.5.2",
+    "style-loader": "^0.13.1",
+    "typescript": "~3.0.3",
+    "webpack": "^2.2.1"
+  }
+}
