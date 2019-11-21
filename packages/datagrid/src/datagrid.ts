@@ -76,6 +76,7 @@ class DataGrid extends Widget {
     this._stretchLastRow = options.stretchLastRow || false;
     this._stretchLastColumn = options.stretchLastColumn || false;
     this._headerVisibility = options.headerVisibility || 'all';
+    this._footerVisibility = options.footerVisibility || 'none';
     this._cellRenderers = options.cellRenderers || new RendererMap();
     this._copyConfig = options.copyConfig || DataGrid.defaultCopyConfig;
 
@@ -88,12 +89,16 @@ class DataGrid extends Widget {
     let cw = Private.clampSectionSize(defaultSizes.columnWidth);
     let rhw = Private.clampSectionSize(defaultSizes.rowHeaderWidth);
     let chh = Private.clampSectionSize(defaultSizes.columnHeaderHeight);
+    let rfw = Private.clampSectionSize(defaultSizes.rowFooterWidth);
+    let cfh = Private.clampSectionSize(defaultSizes.columnFooterHeight);
 
     // Set up the sections lists.
     this._rowSections = new SectionList({ defaultSize: rh });
     this._columnSections = new SectionList({ defaultSize: cw });
     this._rowHeaderSections = new SectionList({ defaultSize: rhw });
     this._columnHeaderSections = new SectionList({ defaultSize: chh });
+    this._rowFooterSections = new SectionList({ defaultSize: rfw });
+    this._columnFooterSections = new SectionList({ defaultSize: cfh });
 
     // Create the canvas, buffer, and overlay objects.
     this._canvas = Private.createCanvas();
@@ -214,6 +219,8 @@ class DataGrid extends Widget {
     this._columnSections.clear();
     this._rowHeaderSections.clear();
     this._columnHeaderSections.clear();
+    this._rowFooterSections.clear();
+    this._columnFooterSections.clear();
 
     // Dispose of the base class.
     super.dispose();
@@ -262,6 +269,8 @@ class DataGrid extends Widget {
     this._columnSections.clear();
     this._rowHeaderSections.clear();
     this._columnHeaderSections.clear();
+    this._rowFooterSections.clear();
+    this._columnFooterSections.clear();
 
     // Populate the section lists.
     if (value) {
@@ -269,6 +278,8 @@ class DataGrid extends Widget {
       this._columnSections.insert(0, value.columnCount('body'));
       this._rowHeaderSections.insert(0, value.columnCount('row-header'));
       this._columnHeaderSections.insert(0, value.rowCount('column-header'));
+      this._rowFooterSections.insert(0, value.columnCount('row-footer'));
+      this._columnFooterSections.insert(0, value.rowCount('column-footer'));
     }
 
     // Reset the scroll position.
@@ -436,6 +447,30 @@ class DataGrid extends Widget {
   }
 
   /**
+   * Get the footer visibility for the data grid.
+   */
+  get footerVisibility(): DataGrid.FooterVisibility {
+    return this._footerVisibility;
+  }
+
+  /**
+   * Set the footer visibility for the data grid.
+   */
+  set footerVisibility(value: DataGrid.FooterVisibility) {
+    // Bail if the visibility does not change.
+    if (this._footerVisibility === value) {
+      return;
+    }
+
+    // Update the internal visibility.
+    this._footerVisibility = value;
+
+    // Sync the viewport.
+    this._syncViewport();
+  }
+
+
+  /**
    * Get the default sizes for the various sections of the data grid.
    */
   get defaultSizes(): DataGrid.DefaultSizes {
@@ -443,7 +478,10 @@ class DataGrid extends Widget {
     let columnWidth = this._columnSections.defaultSize;
     let rowHeaderWidth = this._rowHeaderSections.defaultSize;
     let columnHeaderHeight = this._columnHeaderSections.defaultSize;
-    return { rowHeight, columnWidth, rowHeaderWidth, columnHeaderHeight };
+    let rowFooterWidth = this._rowFooterSections.defaultSize;
+    let columnFooterHeight = this._columnFooterSections.defaultSize;
+    return { rowHeight, columnWidth, rowHeaderWidth, columnHeaderHeight,
+      rowFooterWidth, columnFooterHeight };
   }
 
   /**
@@ -455,12 +493,16 @@ class DataGrid extends Widget {
     let cw = Private.clampSectionSize(value.columnWidth);
     let rhw = Private.clampSectionSize(value.rowHeaderWidth);
     let chh = Private.clampSectionSize(value.columnHeaderHeight);
+    let rfw = Private.clampSectionSize(value.rowFooterWidth);
+    let cfh = Private.clampSectionSize(value.columnFooterHeight);
 
     // Update the section default sizes.
     this._rowSections.defaultSize = rh;
     this._columnSections.defaultSize = cw;
     this._rowHeaderSections.defaultSize = rhw;
     this._columnHeaderSections.defaultSize = chh;
+    this._rowFooterSections.defaultSize = rfw;
+    this._columnFooterSections.defaultSize = cfh;
 
     // Sync the viewport.
     this._syncViewport();
@@ -553,6 +595,32 @@ class DataGrid extends Widget {
   }
 
   /**
+   * The virtual width of the row footers.
+   */
+  get footerWidth(): number {
+    if (this._footerVisibility === 'none') {
+      return 0;
+    }
+    if (this._footerVisibility === 'column') {
+      return 0;
+    }
+    return this._rowFooterSections.length;
+  }
+
+  /**
+   * The virtual height of the column footers.
+   */
+  get footerHeight(): number {
+    if (this._footerVisibility === 'none') {
+      return 0;
+    }
+    if (this._footerVisibility === 'row') {
+      return 0;
+    }
+    return this._columnFooterSections.length;
+  }
+
+  /**
    * The virtual width of the grid body.
    *
    * #### Notes
@@ -579,7 +647,7 @@ class DataGrid extends Widget {
    * This does *not* account for a stretched last column.
    */
   get totalWidth(): number {
-    return this.headerWidth + this.bodyWidth;
+    return this.headerWidth + this.bodyWidth + this.footerWidth;
   }
 
   /**
@@ -589,7 +657,7 @@ class DataGrid extends Widget {
    * This does *not* account for a stretched last row.
    */
   get totalHeight(): number {
-    return this.headerHeight + this.bodyHeight;
+    return this.headerHeight + this.bodyHeight + this.footerHeight;
   }
 
   /**
@@ -610,14 +678,14 @@ class DataGrid extends Widget {
    * The width of the visible portion of the grid body.
    */
   get pageWidth(): number {
-    return Math.max(0, this.viewportWidth - this.headerWidth);
+    return Math.max(0, this.viewportWidth - (this.headerWidth + this.footerWidth));
   }
 
   /**
    * The height of the visible portion of the grid body.
    */
   get pageHeight(): number {
-    return Math.max(0, this.viewportHeight - this.headerHeight);
+    return Math.max(0, this.viewportHeight - (this.headerHeight + this.footerHeight));
   }
 
   /**
@@ -947,8 +1015,10 @@ class DataGrid extends Widget {
     let count: number;
     if (region === 'body') {
       count = this._rowSections.count;
-    } else {
+    } else if (region === 'column-header') {
       count = this._columnHeaderSections.count;
+    } else {
+      count = this._columnFooterSections.count;
     }
     return count;
   }
@@ -960,12 +1030,14 @@ class DataGrid extends Widget {
    *
    * @returns The column count for the specified region.
    */
-  columnCount(region: DataModel.RowRegion): number {
+  columnCount(region: DataModel.ColumnRegion): number {
     let count: number;
     if (region === 'body') {
       count = this._columnSections.count;
-    } else {
+    } else  if (region === 'row-header') {
       count = this._rowHeaderSections.count;
+    } else {
+      count = this._rowFooterSections.count;
     }
     return count;
   }
@@ -991,6 +1063,8 @@ class DataGrid extends Widget {
     // Return early for the column header region.
     if (region === 'column-header') {
       return this._columnHeaderSections.indexOf(offset);
+    } else if (region === 'column-footer') {
+      return this._columnFooterSections.indexOf(offset);      
     }
 
     // Fetch the index.
@@ -1044,6 +1118,8 @@ class DataGrid extends Widget {
     // Return early for the row header region.
     if (region === 'row-header') {
       return this._rowHeaderSections.indexOf(offset);
+    } else if (region === 'row-footer') {
+      return this._rowFooterSections.indexOf(offset);
     }
 
     // Fetch the index.
@@ -1093,8 +1169,10 @@ class DataGrid extends Widget {
     let offset: number;
     if (region === 'body') {
       offset = this._rowSections.offsetOf(index);
-    } else {
+    } else if (region === 'column-header') {
       offset = this._columnHeaderSections.offsetOf(index);
+    } else {
+      offset = this._columnFooterSections.offsetOf(index);
     }
     return offset;
   }
@@ -1115,8 +1193,10 @@ class DataGrid extends Widget {
     let offset: number;
     if (region === 'body') {
       offset = this._columnSections.offsetOf(index);
-    } else {
+    } else if (region === 'row-header') {
       offset = this._rowHeaderSections.offsetOf(index);
+    } else {
+      offset = this._rowFooterSections.offsetOf(index);      
     }
     return offset;
   }
@@ -1137,6 +1217,8 @@ class DataGrid extends Widget {
     // Return early for the column header region.
     if (region === 'column-header') {
       return this._columnHeaderSections.sizeOf(index);
+    } else if (region === 'column-footer') {
+      return this._columnFooterSections.sizeOf(index);
     }
 
     // Fetch the row size.
@@ -1186,6 +1268,8 @@ class DataGrid extends Widget {
     // Return early for the row header region.
     if (region === 'row-header') {
       return this._rowHeaderSections.sizeOf(index);
+    } else if (region === 'row-footer') {
+      return this._rowFooterSections.sizeOf(index);
     }
 
     // Fetch the column size.
@@ -1264,6 +1348,9 @@ class DataGrid extends Widget {
     case 'column-header':
       this._columnHeaderSections.reset();
       break;
+    case 'column-footer':
+      this._columnFooterSections.reset();
+      break;
     default:
       throw 'unreachable';
     }
@@ -1287,6 +1374,9 @@ class DataGrid extends Widget {
       break;
     case 'row-header':
       this._rowHeaderSections.reset();
+      break;
+    case 'row-footer':
+      this._rowFooterSections.reset();
       break;
     default:
       throw 'unreachable';
@@ -1364,6 +1454,8 @@ class DataGrid extends Widget {
     // Fetch the header and body dimensions.
     let hw = this.headerWidth;
     let hh = this.headerHeight;
+    let fw = this.footerWidth;
+    let fh = this.footerHeight;
     let bw = this.bodyWidth;
     let bh = this.bodyHeight;
     let ph = this.pageHeight;
@@ -1409,7 +1501,7 @@ class DataGrid extends Widget {
     if (ly >= 0 && ly < hh && lx >= 0 && lx < (hw + bw)) {
       // Convert to unscrolled virtual coordinates.
       let vx = lx + this._scrollX - hw;
-      let vy = ly
+      let vy = ly;
 
       // Fetch the row and column index.
       let row = this.rowAt('column-header', vy);
@@ -1431,10 +1523,36 @@ class DataGrid extends Widget {
       return { region: 'column-header', row, column, x, y, width, height };
     }
 
+    // Check for a column footer hit.
+    if (ly >= (hh + bh) && ly < (hh + bh + fh) && lx >= 0 && lx < (hw + bw)) {
+      // Convert to unscrolled virtual coordinates.
+      let vx = lx + this._scrollX - hw;
+      let vy = ly - (hh + bh);
+
+      // Fetch the row and column index.
+      let row = this.rowAt('column-footer', vy);
+      let column = this.columnAt('body', vx);
+
+      // Fetch the cell offset position.
+      let ox = this.columnOffset('body', column);
+      let oy = this.rowOffset('column-footer', row);
+
+      // Fetch the cell width and height.
+      let width = this.columnSize('body', column);
+      let height = this.rowSize('column-footer', row);
+
+      // Compute the leading and trailing positions.
+      let x = vx - ox;
+      let y = vy - oy;
+
+      // Return the hit test result.
+      return { region: 'column-footer', row, column, x, y, width, height };
+    }
+
     // Check for a row header hit.
     if (lx >= 0 && lx < hw && ly >= 0 && ly < (hh + bh)) {
       // Convert to unscrolled virtual coordinates.
-      let vx = lx
+      let vx = lx;
       let vy = ly + this._scrollY - hh;
 
       // Fetch the row and column index.
@@ -1455,6 +1573,32 @@ class DataGrid extends Widget {
 
       // Return the hit test result.
       return { region: 'row-header', row, column, x, y, width, height };
+    }
+
+    // Check for a row footer hit.
+    if (lx >= (hw + bw) && lx < (hw + bw + fw) && ly >= 0 && ly < (hh + bh)) {
+      // Convert to unscrolled virtual coordinates.
+      let vx = lx - (hw + bw);
+      let vy = ly + this._scrollY - hh;
+
+      // Fetch the row and column index.
+      let row = this.rowAt('body', vy);
+      let column = this.columnAt('row-footer', vx);
+
+      // Fetch the cell offset position.
+      let ox = this.columnOffset('row-footer', column);
+      let oy = this.rowOffset('body', row);
+
+      // Fetch the cell width and height.
+      let width = this.columnSize('row-footer', column);
+      let height = this.rowSize('body', row);
+
+      // Compute the leading and trailing positions.
+      let x = vx - ox;
+      let y = vy - oy;
+
+      // Return the hit test result.
+      return { region: 'row-footer', row, column, x, y, width, height };
     }
 
     // Check for a body hit.
@@ -2098,7 +2242,18 @@ class DataGrid extends Widget {
       let x = Math.min(this.headerWidth + bx, oldWidth);
       this._paintContent(x, 0, width - x, height);
     } else if (width > oldWidth) {
+      oldWidth -= this.footerWidth;
       this._paintContent(oldWidth, 0, width - oldWidth, height);
+    } else if (this.footerWidth > 0) {
+      // Width is shrinking, just blit the footer over
+      let fw = this.footerWidth;
+      let hw = this.headerWidth;
+      let floatX = hw + this.bodyWidth - this._scrollX;
+      let sx = Math.min(oldWidth - fw, floatX);
+      let dx = Math.max(Math.min(width - fw, floatX), hw);
+      if (sx > dx) {
+        this._blitContent(this._canvas, sx, 0, fw, height, dx, 0);
+      }
     }
 
     // Paint the bottom edge as needed.
@@ -2107,7 +2262,18 @@ class DataGrid extends Widget {
       let y = Math.min(this.headerHeight + by, oldHeight);
       this._paintContent(0, y, width, height - y);
     } else if (height > oldHeight) {
+      oldHeight -= this.footerHeight;
       this._paintContent(0, oldHeight, width, height - oldHeight);
+    } else if (this.footerHeight > 0) {
+      // Height is shrinking - just blit the footer over
+      let fh = this.footerHeight;
+      let hh = this.headerHeight;
+      let floatY = hh + this.bodyHeight - this._scrollY;
+      let sy = Math.min(oldHeight - fh, floatY);
+      let dy = Math.max(Math.min(height - fh, floatY), hh);
+      if (sy > dy) {
+        this._blitContent(this._canvas, 0, sy, width, fh, 0, dy);
+      }
     }
 
     // Paint the overlay.
@@ -2149,11 +2315,17 @@ class DataGrid extends Widget {
     let hw = this.headerWidth;
     let hh = this.headerHeight;
 
+    // Fetch page dimensions
+    let pw = this.pageWidth;
+    let ph = this.pageHeight;
+
     // Fetch the section lists.
     let rs = this._rowSections;
     let cs = this._columnSections;
     let rhs = this._rowHeaderSections;
     let chs = this._columnHeaderSections;
+    let rfs = this._rowFooterSections;
+    let cfs = this._columnFooterSections;
 
     // Unpack the message data.
     let { region, r1, c1, r2, c2 } = msg;
@@ -2208,6 +2380,26 @@ class DataGrid extends Widget {
       x2 = cs.extentOf(c2) - sx + hw;
       y2 = chs.extentOf(r2);
       break;
+    case 'row-footer':
+      r1 = Math.max(0, Math.min(r1, rs.count));
+      c1 = Math.max(0, Math.min(c1, rfs.count));
+      r2 = Math.max(0, Math.min(r2, rs.count));
+      c2 = Math.max(0, Math.min(c2, rfs.count));
+      x1 = rfs.offsetOf(c1) + hw + pw;
+      y1 = rs.offsetOf(r1) - sy + hh;
+      x2 = rfs.extentOf(c2) + hw + pw;
+      y2 = rs.extentOf(r2) - sy + hh;
+      break;
+    case 'column-footer':
+      r1 = Math.max(0, Math.min(r1, cfs.count));
+      c1 = Math.max(0, Math.min(c1, cs.count));
+      r2 = Math.max(0, Math.min(r2, cfs.count));
+      c2 = Math.max(0, Math.min(c2, cs.count));
+      x1 = cs.offsetOf(c1) - sx + hw;
+      y1 = cfs.offsetOf(r1) + hh + ph;
+      x2 = cs.extentOf(c2) - sx + hw;
+      y2 = cfs.extentOf(r2) + hh + ph;
+      break;
     case 'corner-header':
       r1 = Math.max(0, Math.min(r1, chs.count));
       c1 = Math.max(0, Math.min(c1, rhs.count));
@@ -2261,8 +2453,10 @@ class DataGrid extends Widget {
   private _onViewportRowResizeRequest(msg: Private.RowResizeRequest): void {
     if (msg.region === 'body') {
       this._resizeRow(msg.index, msg.size);
-    } else {
+    } else if (msg.region === 'column-header') {
       this._resizeColumnHeader(msg.index, msg.size);
+    } else {
+      this._resizeColumnFooter(msg.index, msg.size);      
     }
   }
 
@@ -2272,8 +2466,10 @@ class DataGrid extends Widget {
   private _onViewportColumnResizeRequest(msg: Private.ColumnResizeRequest): void {
     if (msg.region === 'body') {
       this._resizeColumn(msg.index, msg.size);
-    } else {
+    } else if (msg.region === 'row-header') {
       this._resizeRowHeader(msg.index, msg.size);
+    } else {
+      this._resizeRowFooter(msg.index, msg.size);      
     }
   }
 
@@ -2363,8 +2559,10 @@ class DataGrid extends Widget {
     let list: SectionList;
     if (region === 'body') {
       list = this._rowSections;
-    } else {
+    } else if (region === 'column-header') {
       list = this._columnHeaderSections;
+    } else {
+      list = this._columnFooterSections;
     }
 
     // Insert the span, maintaining the scroll position as needed.
@@ -2395,8 +2593,10 @@ class DataGrid extends Widget {
     let list: SectionList;
     if (region === 'body') {
       list = this._columnSections;
-    } else {
+    } else if (region === 'row-header') {
       list = this._rowHeaderSections;
+    } else {
+      list = this._rowFooterSections;
     }
 
     // Insert the span, maintaining the scroll position as needed.
@@ -2427,8 +2627,10 @@ class DataGrid extends Widget {
     let list: SectionList;
     if (region === 'body') {
       list = this._rowSections;
-    } else {
+    } else if (region === 'column-header') {
       list = this._columnHeaderSections;
+    } else {
+      list = this._columnFooterSections;
     }
 
     // Bail if the index or is invalid
@@ -2464,8 +2666,10 @@ class DataGrid extends Widget {
     let list: SectionList;
     if (region === 'body') {
       list = this._columnSections;
-    } else {
+    } else if (region === 'row-header') {
       list = this._rowHeaderSections;
+    } else {
+      list = this._rowFooterSections;
     }
 
     // Bail if the index or is invalid
@@ -2501,8 +2705,10 @@ class DataGrid extends Widget {
     let list: SectionList;
     if (region === 'body') {
       list = this._rowSections;
-    } else {
+    } else if (region === 'column-header') {
       list = this._columnHeaderSections;
+    } else {
+      list = this._columnFooterSections;
     }
 
     // Bail early if the index is out of range.
@@ -2534,8 +2740,10 @@ class DataGrid extends Widget {
     if (region === 'body') {
       this._repaintRegion('body', r1, 0, r2, Infinity);
       this._repaintRegion('row-header', r1, 0, r2, Infinity);
+      this._repaintRegion('row-footer', r1, 0, r2, Infinity);
     } else {
       this._repaintRegion('column-header', r1, 0, r2, Infinity);
+      this._repaintRegion('column-footer', r1, 0, r2, Infinity);
       this._repaintRegion('corner-header', r1, 0, r2, Infinity);
     }
 
@@ -2559,8 +2767,10 @@ class DataGrid extends Widget {
     let list: SectionList;
     if (region === 'body') {
       list = this._columnSections;
-    } else {
+    } else if (region === 'row-header') {
       list = this._rowHeaderSections;
+    } else {
+      list = this._rowFooterSections;
     }
 
     // Bail early if the index is out of range.
@@ -2592,9 +2802,11 @@ class DataGrid extends Widget {
     if (region === 'body') {
       this._repaintRegion('body', 0, c1, Infinity, c2);
       this._repaintRegion('column-header', 0, c1, Infinity, c2);
+      this._repaintRegion('column-footer', 0, c1, Infinity, c2);
     } else {
       this._repaintRegion('row-header', 0, c1, Infinity, c2);
       this._repaintRegion('corner-header', 0, c1, Infinity, c2);
+      this._repaintRegion('row-footer', 0, c1, Infinity, c2);
     }
 
     // Schedule a repaint of the overlay.
@@ -2632,12 +2844,16 @@ class DataGrid extends Widget {
     let nc = this._columnSections.count;
     let nrh = this._rowHeaderSections.count;
     let nch = this._columnHeaderSections.count;
+    let nrf = this._rowFooterSections.count;
+    let ncf = this._columnFooterSections.count;
 
     // Compute the delta count for each region.
     let dr = this._dataModel!.rowCount('body') - nr;
     let dc = this._dataModel!.columnCount('body') - nc;
     let drh = this._dataModel!.columnCount('row-header') - nrh;
     let dch = this._dataModel!.rowCount('column-header') - nch;
+    let drf = this._dataModel!.columnCount('row-footer') - nrf;
+    let dcf = this._dataModel!.rowCount('column-footer') - ncf;
 
     // Update the row sections, if needed.
     if (dr > 0) {
@@ -2665,6 +2881,20 @@ class DataGrid extends Widget {
       this._columnHeaderSections.insert(nch, dch);
     } else if (dch < 0) {
       this._columnHeaderSections.remove(nch + dch, -dch);
+    }
+
+    // Update the row footer sections, if needed.
+    if (drf > 0) {
+      this._rowFooterSections.insert(nrf, drf);
+    } else if (drf < 0) {
+      this._rowFooterSections.remove(nrf + drf, -drf);
+    }
+
+    // Update the column footer sections, if needed.
+    if (dcf > 0) {
+      this._columnFooterSections.insert(ncf, dcf);
+    } else if (dcf < 0) {
+      this._columnFooterSections.remove(ncf + dcf, -dcf);
     }
 
     // Sync the viewport.
@@ -2935,8 +3165,10 @@ class DataGrid extends Widget {
       return;
     }
 
+    this._paintContent(0, pos, vw, vh - pos);
+
     // Compute the X blit dimensions.
-    let sx = 0;
+    /*let sx = 0;
     let sw = vw;
     let dx = 0;
 
@@ -2969,7 +3201,7 @@ class DataGrid extends Widget {
       this._paintContent(0, y, vw, vh - y);
     } else if (delta < 0) {
       this._paintContent(0, vh + delta, vw, -delta);
-    }
+    }*/
 
     // Paint the overlay.
     this._paintOverlay();
@@ -3019,6 +3251,7 @@ class DataGrid extends Widget {
 
     // Look up the row header width.
     let hw = this.headerWidth;
+    //let fw = this.footerWidth;
 
     // Compute the viewport offset of the section.
     let offset = list.offsetOf(index) + hw - this._scrollX;
@@ -3047,10 +3280,18 @@ class DataGrid extends Widget {
       return;
     }
 
+    // This is suboptimal right now
+    this._paintContent(pos, 0, vw - pos, vh);
+
     // Compute the Y blit dimensions.
-    let sy = 0;
+    /*let sy = 0;
     let sh = vh;
     let dy = 0;
+
+    let fd = 0;
+    if (this.bodyWidth > this.pageWidth) {
+      fd = fw + delta;
+    }
 
     // Compute the X blit dimensions.
     let sx: number;
@@ -3058,11 +3299,11 @@ class DataGrid extends Widget {
     let dx: number;
     if (offset + newSize <= hw) {
       sx = hw - delta;
-      sw = vw - sx;
+      sw = vw - sx - fd;
       dx = hw;
     } else {
       sx = offset + oldSize;
-      sw = vw - sx;
+      sw = vw - sx - fd;
       dx = sx + delta;
     }
 
@@ -3080,8 +3321,12 @@ class DataGrid extends Widget {
       let x = hw + this._columnSections.offsetOf(c);
       this._paintContent(x, 0, vw - x, vh);
     } else if (delta < 0) {
-      this._paintContent(vw + delta, 0, -delta, vh);
-    }
+      if (this.bodyWidth < this.pageWidth && this.bodyWidth - delta >= this.pageWidth) {
+        this._paintContent(vw + delta - fw, 0, fw - delta, vh);
+      } else {
+        this._paintContent(vw + delta - fw, 0, -delta, vh);
+      }
+    }*/
 
     // Paint the overlay.
     this._paintOverlay();
@@ -3146,8 +3391,10 @@ class DataGrid extends Widget {
       return;
     }
 
+    this._paintContent(offset, 0, vw - offset, vh);
+    delta;
     // Compute the blit content dimensions.
-    let sx = offset + oldSize;
+    /*let sx = offset + oldSize;
     let sy = 0;
     let sw = vw - sx;
     let sh = vh;
@@ -3169,7 +3416,97 @@ class DataGrid extends Widget {
       this._paintContent(x, 0, vw - x, vh);
     } else if (delta < 0) {
       this._paintContent(vw + delta, 0, -delta, vh);
+    }*/
+
+    // Paint the overlay.
+    this._paintOverlay();
+
+    // Sync the scroll state after painting.
+    this._syncScrollState();
+  }
+
+  /**
+   * Resize a row footer section immediately.
+   */
+  private _resizeRowFooter(index: number, size: number): void {
+    // Look up the target section list.
+    let list = this._rowFooterSections;
+
+    // Bail early if the index is out of range.
+    if (index < 0 || index >= list.count) {
+      return;
     }
+
+    // Look up the old size of the section.
+    let oldSize = list.sizeOf(index);
+
+    // Normalize the new size of the section.
+    let newSize = Private.clampSectionSize(size);
+
+    // Bail early if the size does not change.
+    if (oldSize === newSize) {
+      return;
+    }
+
+    // Resize the section in the list.
+    list.resize(index, newSize);
+
+    // Get the current size of the viewport.
+    let vw = this._viewportWidth;
+    let vh = this._viewportHeight;
+
+    // If there is nothing to paint, sync the scroll state.
+    if (!this._viewport.isVisible || vw === 0 || vh === 0) {
+      this._syncScrollState();
+      return;
+    }
+
+    // Compute the size delta.
+    //let delta = newSize - oldSize;
+
+    // Look up the offset of the section.
+    let offset = list.offsetOf(index) + this.headerWidth + this.pageWidth;
+
+    // Bail early if the section is fully outside the viewport.
+    if (offset >= vw) {
+      this._syncScrollState();
+      return;
+    }
+
+    // Paint the entire tail if the section spans the viewport.
+    if (offset + oldSize >= vw || offset + newSize >= vw) {
+      this._paintContent(offset, 0, vw - offset, vh);
+      this._paintOverlay();
+      this._syncScrollState();
+      return;
+    }
+
+    this._paintContent(0, 0, vw, vh);
+
+    // Compute the blit content dimensions.
+    /*let sx = offset + oldSize;
+    let sy = 0;
+    let sw = vw - sx;
+    let sh = vh;
+    let dx = sx + delta;
+    let dy = 0;
+
+    // Blit the valid contents to the destination.
+    this._blitContent(this._canvas, sx, sy, sw, sh, dx, dy);
+
+    // Repaint the header section if needed.
+    if (newSize > 0) {
+      this._paintContent(offset, 0, newSize, vh);
+    }
+
+    // Paint the trailing space as needed.
+    if (this._stretchLastColumn && this.pageWidth > this.bodyWidth) {
+      let c = this._columnSections.count - 1;
+      let x = this.headerWidth + this._columnSections.offsetOf(c);
+      this._paintContent(x, 0, vw - x, vh);
+    } else if (delta < 0) {
+      this._paintContent(vw + delta, 0, -delta, vh);
+    }*/
 
     // Paint the overlay.
     this._paintOverlay();
@@ -3215,10 +3552,10 @@ class DataGrid extends Widget {
     }
 
     // Paint the overlay.
-    this._paintOverlay();
+    //this._paintOverlay();
 
     // Compute the size delta.
-    let delta = newSize - oldSize;
+    //let delta = newSize - oldSize;
 
     // Look up the offset of the section.
     let offset = list.offsetOf(index);
@@ -3237,8 +3574,10 @@ class DataGrid extends Widget {
       return;
     }
 
+    this._paintContent(0, offset, vw, vh - offset);
+
     // Compute the blit content dimensions.
-    let sx = 0;
+    /*let sx = 0;
     let sy = offset + oldSize;
     let sw = vw;
     let sh = vh - sy;
@@ -3260,7 +3599,100 @@ class DataGrid extends Widget {
       this._paintContent(0, y, vw, vh - y);
     } else if (delta < 0) {
       this._paintContent(0, vh + delta, vw, -delta);
+    }*/
+
+    // Paint the overlay.
+    this._paintOverlay();
+
+    // Sync the scroll state after painting.
+    this._syncScrollState();
+  }
+
+  /**
+   * Resize a column footer section immediately.
+   */
+  private _resizeColumnFooter(index: number, size: number): void {
+    // Look up the target section list.
+    let list = this._columnFooterSections;
+
+    // Bail early if the index is out of range.
+    if (index < 0 || index >= list.count) {
+      return;
     }
+
+    // Look up the old size of the section.
+    let oldSize = list.sizeOf(index);
+
+    // Normalize the new size of the section.
+    let newSize = Private.clampSectionSize(size);
+
+    // Bail early if the size does not change.
+    if (oldSize === newSize) {
+      return;
+    }
+
+    // Resize the section in the list.
+    list.resize(index, newSize);
+
+    // Get the current size of the viewport.
+    let vw = this._viewportWidth;
+    let vh = this._viewportHeight;
+
+    // If there is nothing to paint, sync the scroll state.
+    if (!this._viewport.isVisible || vw === 0 || vh === 0) {
+      this._syncScrollState();
+      return;
+    }
+
+    // Paint the overlay.
+    //this._paintOverlay();
+
+    // Compute the size delta.
+    //let delta = newSize - oldSize;
+
+    // Look up the offset of the section.
+    let offset = list.offsetOf(index);// + this.headerHeight + this.pageHeight;
+
+    // Bail early if the section is fully outside the viewport.
+    if (offset >= vh) {
+      this._syncScrollState();
+      return;
+    }
+
+    // Paint the entire tail if the section spans the viewport.
+    if (offset + oldSize >= vh || offset + newSize >= vh) {
+      this._paintContent(0, offset, vw, vh - offset);
+      this._paintOverlay();
+      this._syncScrollState();
+      return;
+    }
+
+    this._paintContent(0, 0, vw, vh);
+
+    // Compute the blit content dimensions.
+    /*let sx = 0;
+    let sy = offset + oldSize;
+    let sw = vw;
+    let sh = vh - sy;
+    let dx = 0;
+    let dy = sy + delta;
+
+    // Blit the valid contents to the destination.
+    this._blitContent(this._canvas, sx, sy, sw, sh, dx, dy);
+
+    // Repaint the header section if needed.
+    if (newSize > 0) {
+      this._paintContent(0, offset, vw, newSize);
+    }
+
+    // Paint the trailing space as needed.
+    if (this._stretchLastRow && this.pageHeight > this.bodyHeight) {
+      let r = this._rowSections.count - 1;
+      let y = this.headerHeight + this._rowSections.offsetOf(r);
+      this._paintContent(0, y, vw, vh - y);
+    } else if (delta < 0) {
+      this._paintContent(0, vh + delta, vw, -delta);
+    }*/
 
     // Paint the overlay.
     this._paintOverlay();
@@ -3313,8 +3745,8 @@ class DataGrid extends Widget {
     let contentY = this.headerHeight;
 
     // Get the visible content dimensions.
-    let contentWidth = width - contentX;
-    let contentHeight = height - contentY;
+    let contentWidth = width - contentX - this.footerWidth;
+    let contentHeight = height - contentY - this.footerHeight;
 
     // Bail early if there is no content to draw.
     if (contentWidth <= 0 && contentHeight <= 0) {
@@ -3367,7 +3799,8 @@ class DataGrid extends Widget {
         let w = width;
         let h = contentHeight - Math.abs(dy);
         this._blitContent(this._canvas, x, y, w, h, x, y - dy);
-        this._paintContent(0, dy < 0 ? contentY : height - dy, width, Math.abs(dy));
+        this._paintContent(0, dy < 0 ? contentY : contentHeight + contentY - dy, width, Math.abs(dy));
+        //this._paintContent(0, dy < 0 ? contentY : height - dy, width, Math.abs(dy));
       }
     }
 
@@ -3386,7 +3819,8 @@ class DataGrid extends Widget {
         let w = contentWidth - Math.abs(dx);
         let h = height;
         this._blitContent(this._canvas, x, y, w, h, x - dx, y);
-        this._paintContent(dx < 0 ? contentX : width - dx, 0, Math.abs(dx), height);
+        this._paintContent(dx < 0 ? contentX : contentWidth + contentX - dx, 0, Math.abs(dx), height);
+        //this._paintContent(dx < 0 ? contentX : width - dx, 0, Math.abs(dx), height);
       }
     }
 
@@ -3452,6 +3886,12 @@ class DataGrid extends Widget {
     // Draw the column header region.
     this._drawColumnHeaderRegion(rx, ry, rw, rh);
 
+    // Draw the row footer region.
+    this._drawRowFooterRegion(rx, ry, rw, rh);
+
+    // Draw the column footer region.
+    this._drawColumnFooterRegion(rx, ry, rw, rh);
+
     // Draw the corner header region.
     this._drawCornerHeaderRegion(rx, ry, rw, rh);
   }
@@ -3508,8 +3948,10 @@ class DataGrid extends Widget {
    */
   private _drawBodyRegion(rx: number, ry: number, rw: number, rh: number): void {
     // Get the visible content dimensions.
-    let contentW = this._columnSections.length - this._scrollX;
-    let contentH = this._rowSections.length - this._scrollY;
+    let contentW = Math.min(this.pageWidth, this._columnSections.length - this._scrollX);
+    let contentH = Math.min(this.pageHeight, this._rowSections.length - this._scrollY);
+    //let contentW = this._columnSections.length - this._scrollX;
+    //let contentH = this._rowSections.length - this._scrollY;
 
     // Bail if there is no content to draw.
     if (contentW <= 0 || contentH <= 0) {
@@ -3647,7 +4089,7 @@ class DataGrid extends Widget {
   private _drawRowHeaderRegion(rx: number, ry: number, rw: number, rh: number): void {
     // Get the visible content dimensions.
     let contentW = this.headerWidth;
-    let contentH = this.bodyHeight - this._scrollY;
+    let contentH = Math.min(this.pageHeight, this.bodyHeight - this._scrollY);
 
     // Bail if there is no content to draw.
     if (contentW <= 0 || contentH <= 0) {
@@ -3764,11 +4206,134 @@ class DataGrid extends Widget {
   }
 
   /**
+   * Draw the row footer region which intersects the dirty rect.
+   */
+  private _drawRowFooterRegion(rx: number, ry: number, rw: number, rh: number): void {
+    // Get the visible content dimensions.
+    let contentW = this.footerWidth;
+    let contentH = Math.min(this.pageHeight, this.bodyHeight - this._scrollY);
+
+    // Bail if there is no content to draw.
+    if (contentW <= 0 || contentH <= 0) {
+      return;
+    }
+
+    // Get the visible content origin.
+    let contentX = this.headerWidth + Math.min(this.pageWidth, this.bodyWidth - this._scrollX)
+    let contentY = this.headerHeight;
+
+    // Bail if the dirty rect does not intersect the content area.
+    if (rx + rw <= contentX) {
+      return;
+    }
+    if (ry + rh <= contentY) {
+      return;
+    }
+    if (rx >= contentX + contentW) {
+      return;
+    }
+    if (ry >= contentY + contentH) {
+      return;
+    }
+
+    // Fetch the geometry.
+    let bh = this.bodyHeight;
+    let ph = this.pageHeight;
+
+    // Get the upper and lower bounds of the dirty content area.
+    let x1 = Math.max(rx, contentX);
+    let y1 = Math.max(ry, contentY);
+    let x2 = Math.min(rx + rw - 1, contentX + contentW - 1);
+    let y2 = Math.min(ry + rh - 1, contentY + contentH - 1);
+
+    // Convert the dirty content bounds into cell bounds.
+    let r1 = this._rowSections.indexOf(y1 - contentY + this._scrollY);
+    let c1 = this._rowFooterSections.indexOf(x1 - contentX);
+    let r2 = this._rowSections.indexOf(y2 - contentY + this._scrollY);
+    let c2 = this._rowFooterSections.indexOf(x2 - contentX);
+
+    // Fetch max row and column.
+    let maxRow = this._rowSections.count - 1;
+    let maxColumn = this._rowFooterSections.count - 1;
+
+    // Handle a dirty content area larger than the cell count.
+    if (r2 < 0) {
+      r2 = maxRow;
+    }
+    if (c2 < 0) {
+      c2 = maxColumn;
+    }
+
+    // Convert the cell bounds back to visible coordinates.
+    let x = this._rowFooterSections.offsetOf(c1) + contentX;
+    let y = this._rowSections.offsetOf(r1) + contentY - this._scrollY;
+
+    // Set up the paint region size variables.
+    let width = 0;
+    let height = 0;
+
+    // Allocate the section sizes arrays.
+    let rowSizes = new Array<number>(r2 - r1 + 1);
+    let columnSizes = new Array<number>(c2 - c1 + 1);
+
+    // Get the row sizes for the region.
+    for (let j = r1; j <= r2; ++j) {
+      let size = this._rowSections.sizeOf(j);
+      rowSizes[j - r1] = size;
+      height += size;
+    }
+
+    // Get the column sizes for the region.
+    for (let i = c1; i <= c2; ++i) {
+      let size = this._rowFooterSections.sizeOf(i);
+      columnSizes[i - c1] = size;
+      width += size;
+    }
+
+    // Adjust the geometry if the last row is stretched.
+    if (this._stretchLastRow && ph > bh && r2 === maxRow) {
+      let dh = this.pageHeight - this.bodyHeight;
+      rowSizes[rowSizes.length - 1] += dh;
+      height += dh;
+      y2 += dh;
+    }
+
+    // Create the paint region object.
+    let rgn: Private.PaintRegion = {
+      region: 'row-footer',
+      xMin: x1, yMin: y1,
+      xMax: x2, yMax: y2,
+      x, y, width, height,
+      row: r1, column: c1,
+      rowSizes, columnSizes
+    };
+
+    // Draw the background.
+    this._drawBackground(rgn, this._style.headerBackgroundColor);
+
+    // Draw the cell content for the paint region.
+    this._drawCells(rgn);
+
+    // Draw the horizontal grid lines.
+    this._drawHorizontalGridLines(rgn,
+      this._style.headerHorizontalGridLineColor ||
+      this._style.headerGridLineColor
+    );
+
+    // Draw the vertical grid lines.
+    this._drawVerticalGridLines(rgn,
+      this._style.headerVerticalGridLineColor ||
+      this._style.headerGridLineColor,
+      true
+    );
+  }
+
+  /**
    * Draw the column header region which intersects the dirty rect.
    */
   private _drawColumnHeaderRegion(rx: number, ry: number, rw: number, rh: number): void {
     // Get the visible content dimensions.
-    let contentW = this.bodyWidth - this._scrollX;
+    let contentW = Math.min(this.pageWidth, this.bodyWidth - this._scrollX);
     let contentH = this.headerHeight;
 
     // Bail if there is no content to draw.
@@ -3876,6 +4441,129 @@ class DataGrid extends Widget {
     this._drawHorizontalGridLines(rgn,
       this._style.headerHorizontalGridLineColor ||
       this._style.headerGridLineColor
+    );
+
+    // Draw the vertical grid lines.
+    this._drawVerticalGridLines(rgn,
+      this._style.headerVerticalGridLineColor ||
+      this._style.headerGridLineColor
+    );
+  }
+
+  /**
+   * Draw the column footer region which intersects the dirty rect.
+   */
+  private _drawColumnFooterRegion(rx: number, ry: number, rw: number, rh: number): void {
+    // Get the visible content dimensions.
+    let contentW = Math.min(this.pageWidth, this.bodyWidth - this._scrollX);
+    let contentH = this.footerHeight;
+
+    // Bail if there is no content to draw.
+    if (contentW <= 0 || contentH <= 0) {
+      return;
+    }
+
+    // Get the visible content origin.
+    let contentX = this.headerWidth;
+    let contentY = this.headerHeight + Math.min(this.pageHeight, this.bodyHeight - this._scrollY);
+
+    // Bail if the dirty rect does not intersect the content area.
+    if (rx + rw <= contentX) {
+      return;
+    }
+    if (ry + rh <= contentY) {
+      return;
+    }
+    if (rx >= contentX + contentW) {
+      return;
+    }
+    if (ry >= contentY + contentH) {
+      return;
+    }
+
+    // Fetch the geometry.
+    let bw = this.bodyWidth;
+    let pw = this.pageWidth;
+
+    // Get the upper and lower bounds of the dirty content area.
+    let x1 = Math.max(rx, contentX);
+    let y1 = Math.max(ry, contentY);
+    let x2 = Math.min(rx + rw - 1, contentX + contentW - 1);
+    let y2 = Math.min(ry + rh - 1, contentY + contentH - 1);
+
+    // Convert the dirty content bounds into cell bounds.
+    let r1 = this._columnFooterSections.indexOf(y1 - contentY);
+    let c1 = this._columnSections.indexOf(x1 - contentX + this._scrollX);
+    let r2 = this._columnFooterSections.indexOf(y2 - contentY);
+    let c2 = this._columnSections.indexOf(x2 - contentX + this._scrollX);
+
+    // Fetch the max row and column.
+    let maxRow = this._columnFooterSections.count - 1;
+    let maxColumn = this._columnSections.count - 1;
+
+    // Handle a dirty content area larger than the cell count.
+    if (r2 < 0) {
+      r2 = maxRow;
+    }
+    if (c2 < 0) {
+      c2 = maxColumn;
+    }
+
+    // Convert the cell bounds back to visible coordinates.
+    let x = this._columnSections.offsetOf(c1) + contentX - this._scrollX;
+    let y = this._columnFooterSections.offsetOf(r1) + contentY;
+
+    // Set up the paint region size variables.
+    let width = 0;
+    let height = 0;
+
+    // Allocate the section sizes arrays.
+    let rowSizes = new Array<number>(r2 - r1 + 1);
+    let columnSizes = new Array<number>(c2 - c1 + 1);
+
+    // Get the row sizes for the region.
+    for (let j = r1; j <= r2; ++j) {
+      let size = this._columnFooterSections.sizeOf(j);
+      rowSizes[j - r1] = size;
+      height += size;
+    }
+
+    // Get the column sizes for the region.
+    for (let i = c1; i <= c2; ++i) {
+      let size = this._columnSections.sizeOf(i);
+      columnSizes[i - c1] = size;
+      width += size;
+    }
+
+    // Adjust the geometry if the last column is stretched.
+    if (this._stretchLastColumn && pw > bw && c2 === maxColumn) {
+      let dw = this.pageWidth - this.bodyWidth;
+      columnSizes[columnSizes.length - 1] += dw;
+      width += dw;
+      x2 += dw;
+    }
+
+    // Create the paint region object.
+    let rgn: Private.PaintRegion = {
+      region: 'column-footer',
+      xMin: x1, yMin: y1,
+      xMax: x2, yMax: y2,
+      x, y, width, height,
+      row: r1, column: c1,
+      rowSizes, columnSizes
+    };
+
+    // Draw the background.
+    this._drawBackground(rgn, this._style.headerBackgroundColor);
+
+    // Draw the cell content for the paint region.
+    this._drawCells(rgn);
+
+    // Draw the horizontal grid lines.
+    this._drawHorizontalGridLines(rgn,
+      this._style.headerHorizontalGridLineColor ||
+      this._style.headerGridLineColor,
+      true
     );
 
     // Draw the vertical grid lines.
@@ -4223,7 +4911,7 @@ class DataGrid extends Widget {
   /**
    * Draw the horizontal grid lines for the given paint region.
    */
-  private _drawHorizontalGridLines(rgn: Private.PaintRegion, color: string | undefined): void {
+  private _drawHorizontalGridLines(rgn: Private.PaintRegion, color: string | undefined, footer: boolean = false): void {
     // Bail if there is no color to draw.
     if (!color) {
       return;
@@ -4251,6 +4939,10 @@ class DataGrid extends Widget {
       if (rgn.row + n === this._rowSections.count) {
         n -= 1;
       }
+    }
+
+    if (footer === true && ph < bh) {
+      n -= 1;
     }
 
     // Draw the horizontal grid lines.
@@ -4284,7 +4976,7 @@ class DataGrid extends Widget {
   /**
    * Draw the vertical grid lines for the given paint region.
    */
-  private _drawVerticalGridLines(rgn: Private.PaintRegion, color: string | undefined): void {
+  private _drawVerticalGridLines(rgn: Private.PaintRegion, color: string | undefined, footer: boolean = false): void {
     // Bail if there is no color to draw.
     if (!color) {
       return;
@@ -4312,6 +5004,10 @@ class DataGrid extends Widget {
       if (rgn.column + n === this._columnSections.count) {
         n -= 1;
       }
+    }
+
+    if (footer === true && pw < bw) {
+      n -= 1;
     }
 
     // Draw the vertical grid lines.
@@ -4833,6 +5529,10 @@ class DataGrid extends Widget {
     let hw = this.headerWidth;
     let hh = this.headerHeight;
 
+    // Fetch the footer width and height.
+    let fw = this.footerWidth;
+    let fh = this.footerHeight;
+
     // Fetch the page width and height.
     let pw = this.pageWidth;
     let ph = this.pageHeight;
@@ -4917,9 +5617,9 @@ class DataGrid extends Widget {
     if (sy < syMax) {
       // Set up the gradient coordinates.
       let x0 = 0;
-      let y0 = vh;
+      let y0 = Math.max(hh, vh - fh);
       let x1 = 0;
-      let y1 = vh - shadow.size;
+      let y1 = y0 - shadow.size;
 
       // Create the gradient object.
       let grad = gc.createLinearGradient(x0, y0, x1, y1);
@@ -4931,8 +5631,8 @@ class DataGrid extends Widget {
 
       // Set up the rect coordinates.
       let x = 0;
-      let y = vh - shadow.size;
-      let w = hw + Math.min(pw, bw - sx);
+      let y = y0 - shadow.size;
+      let w = hw + Math.min(pw, bw - sx) + fw;
       let h = shadow.size;
 
       // Fill the shadow rect with the fill style.
@@ -4943,9 +5643,9 @@ class DataGrid extends Widget {
     // Draw the row footer shadow if needed.
     if (sx < sxMax) {
       // Set up the gradient coordinates.
-      let x0 = vw;
+      let x0 = Math.max(hw, vw - fw);
       let y0 = 0;
-      let x1 = vw - shadow.size;
+      let x1 = x0 - shadow.size;
       let y1 = 0;
 
       // Create the gradient object.
@@ -4957,10 +5657,10 @@ class DataGrid extends Widget {
       grad.addColorStop(1, shadow.color3);
 
       // Set up the rect coordinates.
-      let x = vw - shadow.size;
+      let x = x0 - shadow.size;
       let y = 0;
       let w = shadow.size;
-      let h = hh + Math.min(ph, bh - sy);
+      let h = hh + Math.min(ph, bh - sy) + fh;
 
       // Fill the shadow rect with the fill style.
       gc.fillStyle = grad;
@@ -5000,6 +5700,8 @@ class DataGrid extends Widget {
   private _columnSections: SectionList;
   private _rowHeaderSections: SectionList;
   private _columnHeaderSections: SectionList;
+  private _rowFooterSections: SectionList;
+  private _columnFooterSections: SectionList;
 
   private _dataModel: DataModel | null = null;
   private _selectionModel: SelectionModel | null = null;
@@ -5011,6 +5713,7 @@ class DataGrid extends Widget {
   private _cellRenderers: RendererMap;
   private _copyConfig: DataGrid.CopyConfig;
   private _headerVisibility: DataGrid.HeaderVisibility;
+  private _footerVisibility: DataGrid.FooterVisibility;
 }
 
 
@@ -5186,6 +5889,16 @@ namespace DataGrid {
      * The default height of a column header.
      */
     readonly columnHeaderHeight: number;
+
+    /**
+     * The default width of a row footer.
+     */
+    readonly rowFooterWidth: number;
+
+    /**
+     * The default height of a column footer.
+     */
+    readonly columnFooterHeight: number;
   };
 
   /**
@@ -5193,6 +5906,12 @@ namespace DataGrid {
    */
   export
   type HeaderVisibility = 'all' | 'row' | 'column' | 'none';
+
+  /**
+   * A type alias for the supported header visibility modes.
+   */
+  export
+  type FooterVisibility = 'all' | 'row' | 'column' | 'none';
 
   /**
    * A type alias for the arguments to a copy format function.
@@ -5282,6 +6001,13 @@ namespace DataGrid {
      * The default is `'all'`.
      */
     headerVisibility?: HeaderVisibility;
+
+    /**
+     * The footer visibility for the data grid.
+     *
+     * The default is `'all'`.
+     */
+    footerVisibility?: FooterVisibility;
 
     /**
      * The cell renderer map for the data grid.
@@ -5516,7 +6242,9 @@ namespace DataGrid {
     rowHeight: 20,
     columnWidth: 64,
     rowHeaderWidth: 64,
-    columnHeaderHeight: 20
+    columnHeaderHeight: 20,
+    rowFooterWidth: 64,
+    columnFooterHeight: 20
   };
 
   /**

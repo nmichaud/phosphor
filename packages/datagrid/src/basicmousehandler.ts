@@ -220,7 +220,7 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
 
       // Determine the column region.
       let rgn: DataModel.ColumnRegion = (
-        region === 'column-header' ? 'body' : 'row-header'
+        region === 'column-header' ? 'body' : (region === 'row-footer' ? 'row-footer' : 'row-header')
       );
 
       // Determine the section index.
@@ -246,7 +246,7 @@ class BasicMouseHandler implements DataGrid.IMouseHandler {
 
       // Determine the row region.
       let rgn: DataModel.RowRegion = (
-        region === 'row-header' ? 'body' : 'column-header'
+        region === 'row-header' ? 'body' : (region === 'column-footer' ? 'column-footer' : 'column-header')
       );
 
       // Determine the section index.
@@ -722,7 +722,33 @@ namespace Private {
         result = 'none';
       }
       break;
+    case 'column-footer':
+      if (c > 0 && lw <= 5) {
+        result = 'left';
+      } else if (tw <= 6) {
+        result = 'right';
+      } else if (r > 0 && lh <= 5) {
+        result = 'top';
+      } else if (th <= 6) {
+        result = 'bottom';
+      } else {
+        result = 'none';
+      }
+      break;
     case 'row-header':
+      if (c > 0 && lw <= 5) {
+        result = 'left';
+      } else if (tw <= 6) {
+        result = 'right';
+      } else if (r > 0 && lh <= 5) {
+        result = 'top';
+      } else if (th <= 6) {
+        result = 'bottom';
+      } else {
+        result = 'none';
+      }
+      break;
+    case 'row-footer':
       if (c > 0 && lw <= 5) {
         result = 'left';
       } else if (tw <= 6) {

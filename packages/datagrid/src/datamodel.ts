@@ -114,19 +114,20 @@ namespace DataModel {
    * A type alias for the data model row regions.
    */
   export
-  type RowRegion = 'body' | 'column-header';
+  type RowRegion = 'body' | 'column-header' | 'column-footer';
 
   /**
    * A type alias for the data model column regions.
    */
   export
-  type ColumnRegion = 'body' | 'row-header';
+  type ColumnRegion = 'body' | 'row-header' | 'row-footer';
 
   /**
    * A type alias for the data model cell regions.
    */
   export
-  type CellRegion = 'body' | 'row-header' | 'column-header' | 'corner-header';
+  type CellRegion = 'body' | 'row-header' | 'column-header' |
+                    'row-footer' | 'column-footer' | 'corner-header';
 
   /**
    * The metadata for a column in a data model.
