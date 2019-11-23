@@ -2181,6 +2181,12 @@ class DataGrid extends Widget {
       y1 = rs.offsetOf(r1) - sy + hh;
       x2 = cs.extentOf(c2) - sx + hw;
       y2 = rs.extentOf(r2) - sy + hh;
+      if (this._stretchLastRow && r2 === rs.count - 1) {
+        y2 = xMax;
+      }
+      if (this._stretchLastColumn && c2 === cs.count - 1) {
+        x2 = xMax;
+      }
       break;
     case 'row-header':
       r1 = Math.max(0, Math.min(r1, rs.count));
