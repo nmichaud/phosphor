@@ -4222,6 +4222,10 @@ class DataGrid extends Widget {
     let contentX = this.headerWidth + Math.min(this.pageWidth, this.bodyWidth - this._scrollX)
     let contentY = this.headerHeight;
 
+    if (this._stretchLastColumn) {
+      contentX = this.headerWidth + this.pageWidth;
+    }
+
     // Bail if the dirty rect does not intersect the content area.
     if (rx + rw <= contentX) {
       return;
@@ -4466,6 +4470,10 @@ class DataGrid extends Widget {
     // Get the visible content origin.
     let contentX = this.headerWidth;
     let contentY = this.headerHeight + Math.min(this.pageHeight, this.bodyHeight - this._scrollY);
+
+    if (this._stretchLastRow) {
+      contentY = this.headerHeight + this.pageHeight;
+    }
 
     // Bail if the dirty rect does not intersect the content area.
     if (rx + rw <= contentX) {
