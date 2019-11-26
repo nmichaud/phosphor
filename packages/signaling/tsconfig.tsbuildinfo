@@ -1,0 +1,268 @@
+{
+  "program": {
+    "fileInfos": {
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/datastore/node_modules/typescript/lib/lib.es5.d.ts": {
+        "version": "1f753cee573dea40df8a9dc873fef5566957b19ad513874f6643d8dfb14842d0",
+        "signature": "1f753cee573dea40df8a9dc873fef5566957b19ad513874f6643d8dfb14842d0"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/datastore/node_modules/typescript/lib/lib.dom.d.ts": {
+        "version": "973df4e41aea3780ce77073777d37dd5896f684124f4c42409f3a832133837a4",
+        "signature": "973df4e41aea3780ce77073777d37dd5896f684124f4c42409f3a832133837a4"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/datastore/node_modules/typescript/lib/lib.es2015.collection.d.ts": {
+        "version": "dd94d8ef48c562389eb58af8df3a3a34d11367f7c818192aa5f16470d469e3f0",
+        "signature": "dd94d8ef48c562389eb58af8df3a3a34d11367f7c818192aa5f16470d469e3f0"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/array.d.ts": {
+        "version": "ad9c11eb4ce47ff62e69ea1a0872e8890a98631473a1d52441efc697d68df645",
+        "signature": "ad9c11eb4ce47ff62e69ea1a0872e8890a98631473a1d52441efc697d68df645"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts": {
+        "version": "d3e6b15c8855a78fb4f7b0a44566286467b45a27f6d03e5f0d6658a074ad23fe",
+        "signature": "d3e6b15c8855a78fb4f7b0a44566286467b45a27f6d03e5f0d6658a074ad23fe"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/chain.d.ts": {
+        "version": "c0e749db4da2d3b9ee39f955d238de7e370f89bd1a14220b9128826753d0a781",
+        "signature": "c0e749db4da2d3b9ee39f955d238de7e370f89bd1a14220b9128826753d0a781"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/empty.d.ts": {
+        "version": "ff512b1bc0ef6c129f99b140cd9f8f2ae4ff0be0e1514f234b5ff7f310c79bd0",
+        "signature": "ff512b1bc0ef6c129f99b140cd9f8f2ae4ff0be0e1514f234b5ff7f310c79bd0"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/enumerate.d.ts": {
+        "version": "b78df7f18eb2864cecb520a634636fe5b6d595b81962c2e750a3dd003d46ddd6",
+        "signature": "b78df7f18eb2864cecb520a634636fe5b6d595b81962c2e750a3dd003d46ddd6"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/filter.d.ts": {
+        "version": "aa1e1191fe9a8984314940148e35719316d70f1f46e1c7211273d2a51f8361da",
+        "signature": "aa1e1191fe9a8984314940148e35719316d70f1f46e1c7211273d2a51f8361da"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/find.d.ts": {
+        "version": "9df51e9d41f96dc944268b70f79c4ef3a2f5c5c6f9bb5474f60b09ba56c5dbdb",
+        "signature": "9df51e9d41f96dc944268b70f79c4ef3a2f5c5c6f9bb5474f60b09ba56c5dbdb"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/map.d.ts": {
+        "version": "7ea641ecda420d366ed6df4c6a02c3546e017e50a1bbd4dee6ac9e20de3c8633",
+        "signature": "7ea641ecda420d366ed6df4c6a02c3546e017e50a1bbd4dee6ac9e20de3c8633"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/range.d.ts": {
+        "version": "ef779693e9f47e3483c48f99d41d344f2fb9f73d2d8e54aba2df544e0cfd07de",
+        "signature": "ef779693e9f47e3483c48f99d41d344f2fb9f73d2d8e54aba2df544e0cfd07de"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/reduce.d.ts": {
+        "version": "e4a260bf17d565e11281020e45df6099566482c6de3ac920f62f203c28619e5c",
+        "signature": "e4a260bf17d565e11281020e45df6099566482c6de3ac920f62f203c28619e5c"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/repeat.d.ts": {
+        "version": "b346e0e5f56a472bec35f0b803e3a72b26df47eec8ba75fdace5e19f63a159bd",
+        "signature": "b346e0e5f56a472bec35f0b803e3a72b26df47eec8ba75fdace5e19f63a159bd"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/retro.d.ts": {
+        "version": "9a396e53f65da000a5ee6a27a408e58a4166edc354db37c22409655f33cef1da",
+        "signature": "9a396e53f65da000a5ee6a27a408e58a4166edc354db37c22409655f33cef1da"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/sort.d.ts": {
+        "version": "4921e9c7e8979c5b54a852093c16f6a4c9b0c52fdefa665f51220acfcd70da77",
+        "signature": "4921e9c7e8979c5b54a852093c16f6a4c9b0c52fdefa665f51220acfcd70da77"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/stride.d.ts": {
+        "version": "4f92788f86fc34f2ad4dc8cb5ce7a4dfa517b1df51d526abf5fc0720752b88b5",
+        "signature": "4f92788f86fc34f2ad4dc8cb5ce7a4dfa517b1df51d526abf5fc0720752b88b5"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/string.d.ts": {
+        "version": "1cb9099cb325ee016f4ff8cd06684d5e708898bec1cb031d29741fe6deb68bda",
+        "signature": "1cb9099cb325ee016f4ff8cd06684d5e708898bec1cb031d29741fe6deb68bda"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/take.d.ts": {
+        "version": "4557ecbb6b007b733a2a14f32660e9cd80f43d3e7732da35fe48b2af8f353e41",
+        "signature": "4557ecbb6b007b733a2a14f32660e9cd80f43d3e7732da35fe48b2af8f353e41"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/zip.d.ts": {
+        "version": "7c242612995f87ddec5355f5085e0f4e5116b6eb5dc292efc1efa43d29a4a8fd",
+        "signature": "7c242612995f87ddec5355f5085e0f4e5116b6eb5dc292efc1efa43d29a4a8fd"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/index.d.ts": {
+        "version": "f5b96373e034ee40f5db161de7624402e4ac79f5dc510377af8a29afee2b15ec",
+        "signature": "f5b96373e034ee40f5db161de7624402e4ac79f5dc510377af8a29afee2b15ec"
+      },
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/signaling/src/index.ts": {
+        "version": "fe7f1378d5b589c1383353198e28dc8b1d7269e8cca667e91854dbc133d6b418",
+        "signature": "e29b5eb559a057d36584ec480d49711f0c81bed176bb6256df584e800c453760"
+      }
+    },
+    "options": {
+      "composite": true,
+      "declaration": true,
+      "noImplicitAny": true,
+      "noEmitOnError": true,
+      "noUnusedLocals": true,
+      "strictNullChecks": true,
+      "module": 1,
+      "moduleResolution": 2,
+      "target": 1,
+      "outDir": "/Users/bjayabalasingham/Projects/javascript/tmp/phosphor/packages/signaling/lib",
+      "lib": [
+        "lib.es5.d.ts",
+        "lib.es2015.collection.d.ts",
+        "lib.dom.d.ts"
+      ],
+      "types": [],
+      "rootDir": "/Users/bjayabalasingham/Projects/javascript/tmp/phosphor/packages/signaling/src",
+      "configFilePath": "/Users/bjayabalasingham/Projects/javascript/tmp/phosphor/packages/signaling/tsconfig.json"
+    },
+    "referencedMap": {
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/chain.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/empty.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/enumerate.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/filter.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/find.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/map.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/range.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/reduce.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/repeat.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/retro.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/sort.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/stride.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/take.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/zip.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/index.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/array.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/chain.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/empty.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/enumerate.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/filter.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/find.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/map.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/range.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/reduce.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/repeat.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/retro.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/sort.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/stride.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/string.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/take.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/zip.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/signaling/src/index.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/index.d.ts"
+      ]
+    },
+    "exportedModulesMap": {
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/chain.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/empty.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/enumerate.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/filter.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/find.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/map.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/range.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/reduce.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/repeat.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/retro.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/sort.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/stride.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/take.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/zip.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts"
+      ],
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/index.d.ts": [
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/array.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/chain.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/empty.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/enumerate.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/filter.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/find.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/map.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/range.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/reduce.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/repeat.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/retro.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/sort.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/stride.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/string.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/take.d.ts",
+        "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/zip.d.ts"
+      ]
+    },
+    "semanticDiagnosticsPerFile": [
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/datastore/node_modules/typescript/lib/lib.es5.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/datastore/node_modules/typescript/lib/lib.dom.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/datastore/node_modules/typescript/lib/lib.es2015.collection.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/array.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/iter.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/chain.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/empty.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/enumerate.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/filter.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/find.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/map.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/range.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/reduce.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/repeat.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/retro.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/sort.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/stride.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/string.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/take.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/zip.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/algorithm/lib/index.d.ts",
+      "/users/bjayabalasingham/projects/javascript/tmp/phosphor/packages/signaling/src/index.ts"
+    ]
+  },
+  "version": "3.5.3"
+}

@@ -69,6 +69,26 @@ abstract class DataModel {
   abstract data(region: DataModel.CellRegion, row: number, column: number): any;
 
   /**
+   * Get the span value for a cell in the data model.
+   *
+   * @param region - The cell region of interest.
+   *
+   * @param row - The row index of the cell of interest.
+   *
+   * @param column - The column index of the cell of interest.
+   *
+   * @param returns The span value for the specified cell.
+   *
+   * #### Notes
+   * The returned data should be treated as immutable.
+   *
+   * This method is called often, and so should be efficient.
+   */
+  span(region: DataModel.CellRegion, row: number, column: number): number {
+    return 1;
+  }
+
+   /**
    * Get the metadata for a cell in the data model.
    *
    * @param region - The cell region of interest.

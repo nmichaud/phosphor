@@ -3512,7 +3512,7 @@ class DataGrid extends Widget {
     let contentH = this._rowSections.length - this._scrollY;
 
     // Bail if there is no content to draw.
-    if (contentW <= 0 || contentH <= 0) {
+    if (contentW <= 0 || contentH <= 0 || this._dataModel === null) {
       return;
     }
 
@@ -3606,6 +3606,28 @@ class DataGrid extends Widget {
       x2 += dw;
     }
 
+    let rowSpans = new Array<number>(r2 - r1 + 1);
+    let rhs = this._rowHeaderSections.count - 1;
+    for (let j = r1; j <= r2; ++j) {
+      let span = this._dataModel.span('row-header', j, rhs - 1);
+      if (span === 0) {
+        rowSpans[j - r1] = 0;
+      } else {
+        rowSpans[j - r1] = -1;
+      }
+    }
+
+    let columnSpans = new Array<number>(c2 - c1 + 1);
+    let chs = this._columnHeaderSections.count - 1;
+    for (let i = c1; i <= c2; ++i) {
+      let span = this._dataModel.span('column-header', chs - 1, i);
+      if (span === 0) {
+        columnSpans[i - c1] = 0;
+      } else {
+        columnSpans[i - c1] = -1;
+      }
+    }
+
     // Create the paint region object.
     let rgn: Private.PaintRegion = {
       region: 'body',
@@ -3613,7 +3635,9 @@ class DataGrid extends Widget {
       xMax: x2, yMax: y2,
       x, y, width, height,
       row: r1, column: c1,
-      rowSizes, columnSizes
+      rowSizes, columnSizes,
+      rowSpans: rowSpans,
+      columnSpans: columnSpans
     };
 
     // Draw the background.
@@ -3650,7 +3674,7 @@ class DataGrid extends Widget {
     let contentH = this.bodyHeight - this._scrollY;
 
     // Bail if there is no content to draw.
-    if (contentW <= 0 || contentH <= 0) {
+    if (contentW <= 0 || contentH <= 0 || this._dataModel === null) {
       return;
     }
 
@@ -3734,6 +3758,18 @@ class DataGrid extends Widget {
       y2 += dh;
     }
 
+    let rowSpans = new Array<number>(r2 - r1 + 1);
+    for (let j = r1; j <= r2; ++j) {
+      rowSpans[j - r1] = -1;
+      for (let i = c1; i <= c2; ++i) {
+        let span = this._dataModel.span('row-header', j, i);
+        if (span === 0) {
+          rowSpans[j - r1] = i - c1;
+          break;
+        }
+      }
+    }
+
     // Create the paint region object.
     let rgn: Private.PaintRegion = {
       region: 'row-header',
@@ -3741,7 +3777,8 @@ class DataGrid extends Widget {
       xMax: x2, yMax: y2,
       x, y, width, height,
       row: r1, column: c1,
-      rowSizes, columnSizes
+      rowSizes, columnSizes,
+      rowSpans: rowSpans
     };
 
     // Draw the background.
@@ -3757,10 +3794,10 @@ class DataGrid extends Widget {
     );
 
     // Draw the vertical grid lines.
-    this._drawVerticalGridLines(rgn,
+    /*this._drawVerticalGridLines(rgn,
       this._style.headerVerticalGridLineColor ||
       this._style.headerGridLineColor
-    );
+    );*/
   }
 
   /**
@@ -3772,7 +3809,7 @@ class DataGrid extends Widget {
     let contentH = this.headerHeight;
 
     // Bail if there is no content to draw.
-    if (contentW <= 0 || contentH <= 0) {
+    if (contentW <= 0 || contentH <= 0 || this._dataModel === null) {
       return;
     }
 
@@ -3856,6 +3893,18 @@ class DataGrid extends Widget {
       x2 += dw;
     }
 
+    let columnSpans = new Array<number>(c2 - c1 + 1);
+    for (let i = c1; i <= c2; ++i) {
+      columnSpans[i - c1] = -1;
+      for (let j = r1; j <= r2; ++j) {
+        let span = this._dataModel.span('column-header', j, i);
+        if (span === 0) {
+          columnSpans[i - c1] = j - r1;
+          break;
+        }
+      }
+    }
+
     // Create the paint region object.
     let rgn: Private.PaintRegion = {
       region: 'column-header',
@@ -3863,7 +3912,8 @@ class DataGrid extends Widget {
       xMax: x2, yMax: y2,
       x, y, width, height,
       row: r1, column: c1,
-      rowSizes, columnSizes
+      rowSizes, columnSizes,
+      columnSpans: columnSpans
     };
 
     // Draw the background.
@@ -3873,10 +3923,10 @@ class DataGrid extends Widget {
     this._drawCells(rgn);
 
     // Draw the horizontal grid lines.
-    this._drawHorizontalGridLines(rgn,
+    /*this._drawHorizontalGridLines(rgn,
       this._style.headerHorizontalGridLineColor ||
       this._style.headerGridLineColor
-    );
+    );*/
 
     // Draw the vertical grid lines.
     this._drawVerticalGridLines(rgn,
@@ -4266,14 +4316,26 @@ class DataGrid extends Widget {
       // Compute the Y position of the line.
       let pos = y + size - 1;
 
+      // Increment the running Y coordinate.
+      y += size;
+
+      // Compute the X position if there are spans
+      if (rgn.rowSpans) {
+        if (rgn.rowSpans[j] === -1) {
+          continue;
+        }
+        let xs = 0;
+        for (let idx = 0; idx < rgn.rowSpans[j]; ++idx) {
+          xs += rgn.columnSizes[idx];
+        }
+        x1 = Math.max(rgn.xMin, rgn.x + xs);
+      }
+
       // Draw the line if it's in range of the dirty rect.
       if (pos >= rgn.yMin && pos <= rgn.yMax) {
         this._canvasGC.moveTo(x1, pos + 0.5);
         this._canvasGC.lineTo(x2, pos + 0.5);
       }
-
-      // Increment the running Y coordinate.
-      y += size;
     }
 
     // Stroke the lines with the specified color.
@@ -4327,14 +4389,26 @@ class DataGrid extends Widget {
       // Compute the X position of the line.
       let pos = x + size - 1;
 
+      // Increment the running X coordinate.
+      x += size;
+
+      // Compute the Y position if there are spans
+      if (rgn.columnSpans) {
+        if (rgn.columnSpans[i] === -1) {
+          continue;
+        }
+        let ys = 0;
+        for (let idx = 0; idx < rgn.columnSpans[i]; ++idx) {
+          ys += rgn.rowSizes[idx];
+        }
+        y1 = Math.max(rgn.yMin, rgn.y + ys);
+      }
+
       // Draw the line if it's in range of the dirty rect.
       if (pos >= rgn.xMin && pos <= rgn.xMax) {
         this._canvasGC.moveTo(pos + 0.5, y1);
         this._canvasGC.lineTo(pos + 0.5, y2);
       }
-
-      // Increment the running X coordinate.
-      x += size;
     }
 
     // Stroke the lines with the specified color.
@@ -5666,6 +5740,16 @@ namespace Private {
      * The column sizes for the columns in the region.
      */
     columnSizes: number[];
+
+    /**
+     * The row spans for the rows in the region.
+     */
+    rowSpans?: number[];
+
+    /**
+     * The column spans for the column in the region.
+     */
+    columnSpans?: number[];
   };
 
   /**
